@@ -15,13 +15,18 @@ export default function Discover() {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
   const [libraryIds, setLibraryIds] = useState(new Set());
+  const [recs, setRecs] = useState([]);
   const [modalGame, setModalGame] = useState(null);
 
-  // Which RAWG games are already in the user's library (to show a badge).
+  // On mount: which games are already in the library, and recommendations.
   useEffect(() => {
     api
       .myLibrary()
       .then((rows) => setLibraryIds(new Set(rows.map((r) => r.game.rawg_id).filter(Boolean))))
+      .catch(() => {});
+    api
+      .recommendations()
+      .then(setRecs)
       .catch(() => {});
   }, []);
 
@@ -52,7 +57,35 @@ export default function Discover() {
 
   const onAdded = (entry) => {
     setLibraryIds((prev) => new Set(prev).add(entry.game.rawg_id));
+    setRecs((prev) => prev.filter((g) => g.rawg_id !== entry.game.rawg_id));
     setModalGame(null);
+  };
+
+  const renderCard = (g) => {
+    const inLib = libraryIds.has(g.rawg_id);
+    return (
+      <div className="game-cell" key={g.rawg_id}>
+        <button
+          onClick={() => !inLib && setModalGame(g)}
+          className="cover-btn"
+          style={{ cursor: inLib ? "default" : "pointer" }}
+          title={inLib ? "Already in your library" : "Add game"}
+        >
+          <CoverArt game={g} />
+        </button>
+        <span className="title">{g.title}</span>
+        <span className="meta">{gameMeta(g)}</span>
+        {inLib ? (
+          <span className="chip-accent" style={{ marginTop: 6, display: "inline-flex" }}>
+            In library
+          </span>
+        ) : (
+          <button className="btn sm" style={{ marginTop: 8 }} onClick={() => setModalGame(g)}>
+            <i className="ph ph-plus" /> Add
+          </button>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -105,7 +138,6 @@ export default function Discover() {
         )}
       </div>
 
-      {/* results */}
       {err && <div className="banner error">{err}</div>}
       {loading && (
         <div className="center">
@@ -113,49 +145,34 @@ export default function Discover() {
         </div>
       )}
 
+      {/* search results */}
       {!loading && q && results.length === 0 && !err && (
         <div className="empty">No games found for “{q}”.</div>
       )}
-
-      {results.length > 0 && (
+      {q && results.length > 0 && (
         <>
           <div className="section-head">
             <h3>Results</h3>
             <span className="sub">{results.length} games</span>
           </div>
-          <div className="game-grid">
-            {results.map((g) => {
-              const inLib = libraryIds.has(g.rawg_id);
-              return (
-                <div className="game-cell" key={g.rawg_id}>
-                  <button
-                    onClick={() => !inLib && setModalGame(g)}
-                    className="cover-btn"
-                    style={{ cursor: inLib ? "default" : "pointer" }}
-                    title={inLib ? "Already in your library" : "Add game"}
-                  >
-                    <CoverArt game={g} />
-                  </button>
-                  <span className="title">{g.title}</span>
-                  <span className="meta">{gameMeta(g)}</span>
-                  {inLib ? (
-                    <span className="chip-accent" style={{ marginTop: 6, display: "inline-flex" }}>
-                      In library
-                    </span>
-                  ) : (
-                    <button
-                      className="btn sm"
-                      style={{ marginTop: 8 }}
-                      onClick={() => setModalGame(g)}
-                    >
-                      <i className="ph ph-plus" /> Add
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <div className="game-grid">{results.map(renderCard)}</div>
         </>
+      )}
+
+      {/* recommendations (only on the default view) */}
+      {!q && recs.length > 0 && (
+        <>
+          <div className="section-head">
+            <h3>Recommended for you</h3>
+            <span className="sub">based on games you've rated highly</span>
+          </div>
+          <div className="game-grid">{recs.map(renderCard)}</div>
+        </>
+      )}
+      {!q && recs.length === 0 && (
+        <div className="empty">
+          Rate a few games in your library and personalized recommendations will show up here.
+        </div>
       )}
 
       {modalGame && (
