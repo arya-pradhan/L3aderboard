@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/nocturne-226bd7f4-eb70-475b-a0c1-4846f9b6248f/styles.css">
+<script src="_ds/nocturne-226bd7f4-eb70-475b-a0c1-4846f9b6248f/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<style>
+:root{
+  --ink-black:#04151f; --dark-slate-grey:#183a37; --wheat:#efd6ac;
+  --burnt-orange:#c44900; --midnight-violet:#432534;
+  --color-bg:#04151f; --color-surface:#183a37; --color-text:#efd6ac;
+  --color-accent:#c44900; --color-accent-2:#432534;
+  --color-divider:color-mix(in srgb, #efd6ac 16%, transparent);
+}
+body{margin:0;background:#0a0a0c;font-family:Inter,system-ui,sans-serif;color:#efd6ac}
+a{color:#c44900}a:hover{color:#e05a12}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(239,214,172,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#efd6ac;color:#04151f;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac}
+.dv-opts{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(239,214,172,.12);color:#efd6ac;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)}
+.dv-card{max-width:100%;background:#04151f;border:1px solid rgba(239,214,172,.1);border-radius:10px;overflow:hidden}
+.dv-opt:target .dv-oid{background:#c44900;color:#efd6ac}
+.dv-next{margin:22px 0 0;font:12px/1.5 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5)}
+.dv-note{margin:0 0 22px;max-width:760px;font:13px/1.6 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)}
+.dv-note b{color:#efd6ac;font-weight:600}
+</style></helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">GamerLog — first pass: home, profile, game page</span></div>
+<p class="dv-note">Grounded in the FastAPI backend: statuses are <b>playing / completed / dropped / backlog</b>, ratings are stored <b>1–10</b>, entries carry <b>hours_played</b> and a source of <b>steam_import</b> or <b>manual</b>, and games carry genres, tags, platforms and a cover_url from RAWG. Covers are grey placeholders — real art comes from RAWG at runtime. Nothing here invents a field the API doesn't have, except <b>collections</b> and <b>top 4</b>, which need new tables.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Home — cinematic hero, top nav, Netflix rows</div>
+<div class="dv-card" style="width:1280px">
+  <div style="display:flex;align-items:center;gap:28px;height:56px;padding:0 28px;background:rgba(4,21,31,.92);border-bottom:1px solid rgba(239,214,172,.09)">
+    <span style="font:700 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">L<span style="color:#c44900">3</span>ADERBOARD</span>
+    <nav style="display:flex;gap:20px;font:500 13px/1 Inter,system-ui,sans-serif">
+      <span style="color:#efd6ac;padding-bottom:3px;border-bottom:2px solid #c44900">Discover</span>
+      <span style="color:rgba(239,214,172,.55)">Library</span>
+      <span style="color:rgba(239,214,172,.55)">Collections</span>
+      <span style="color:rgba(239,214,172,.55)">Feed</span>
+    </nav>
+    <div style="flex:1"></div>
+    <div style="display:flex;align-items:center;gap:8px;width:260px;height:32px;padding:0 11px;border:1px solid rgba(239,214,172,.16);border-radius:8px;background:rgba(24,58,55,.35)">
+      <i class="ph ph-magnifying-glass" style="font-size:14px;color:rgba(239,214,172,.5)"></i>
+      <span style="font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">Search games, people…</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:28px;height:28px;border-radius:50%;background:#432534;box-shadow:inset 0 0 0 1px rgba(239,214,172,.2);display:grid;place-items:center;font:600 11px Inter,system-ui,sans-serif;color:#efd6ac">AP</div>
+      <i class="ph ph-caret-down" style="font-size:11px;color:rgba(239,214,172,.5)"></i>
+    </div>
+  </div>
+
+  <div style="position:relative;height:420px;background:linear-gradient(115deg,#183a37 0%,#04151f 62%);overflow:hidden">
+    <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 78% 30%, rgba(196,73,0,.34), transparent 62%)"></div>
+    <div style="position:absolute;right:0;top:0;bottom:0;width:52%;background:repeating-linear-gradient(135deg,rgba(239,214,172,.05) 0 2px,transparent 2px 9px);mask-image:linear-gradient(to right,transparent,#000 45%)"></div>
+    <div style="position:absolute;right:64px;top:52px;width:236px;height:316px;border-radius:10px;background:linear-gradient(160deg,#1e3f3b,#0b1c25);box-shadow:0 24px 60px rgba(0,0,0,.6),inset 0 0 0 1px rgba(239,214,172,.14);display:flex;align-items:flex-end;padding:14px">
+      <span style="font:500 13px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">cover · 2:3 placeholder</span>
+    </div>
+    <div style="position:relative;padding:64px 0 0 44px;max-width:600px">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
+        <span style="font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#c44900">Spotlight</span>
+        <span style="width:38px;height:1px;background:#c44900"></span>
+        <span style="font:400 11px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5)">picked by the editors, blame them</span>
+      </div>
+      <h1 style="margin:0 0 14px;font:600 52px/1.03 Inter,system-ui,sans-serif;letter-spacing:-.03em;color:#efd6ac">Hollow Knight:<br>Silksong</h1>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;font:400 13px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.62)">
+        <span style="display:flex;align-items:center;gap:5px"><i class="ph-fill ph-star" style="font-size:13px;color:#c44900"></i><b style="color:#efd6ac;font-weight:600">9.1</b>/10</span>
+        <span style="width:1px;height:11px;background:rgba(239,214,172,.2)"></span><span>2025</span>
+        <span style="width:1px;height:11px;background:rgba(239,214,172,.2)"></span><span>Metroidvania · Platformer</span>
+        <span style="width:1px;height:11px;background:rgba(239,214,172,.2)"></span><span>PC · Switch · PS5</span>
+      </div>
+      <p style="margin:0 0 24px;max-width:430px;font:400 14px/1.6 Inter,system-ui,sans-serif;color:rgba(239,214,172,.62);text-wrap:pretty">14 of the 26 people you follow logged it this week. Median rating 9. Median hours before someone rage-quits Act 2: 11.4.</p>
+      <div style="display:flex;gap:10px">
+        <button style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:8px;border:1px solid #c44900;background:rgba(196,73,0,.14);color:#efd6ac;font:500 13.5px/1 Inter,system-ui,sans-serif;cursor:pointer"><i class="ph ph-plus" style="font-size:14px"></i>Add to library</button>
+        <button style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 16px;border-radius:8px;border:1px solid rgba(239,214,172,.22);background:transparent;color:#efd6ac;font:500 13.5px/1 Inter,system-ui,sans-serif;cursor:pointer"><i class="ph ph-stack-simple" style="font-size:14px"></i>Backlog it</button>
+        <button style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(239,214,172,.14);background:transparent;color:rgba(239,214,172,.7);font:500 13.5px/1 Inter,system-ui,sans-serif;cursor:pointer"><i class="ph ph-twitch-logo" style="font-size:14px"></i>3.2k watching</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:30px 0 40px">
+    <div style="padding:0 44px 12px;display:flex;align-items:baseline;gap:12px">
+      <h3 style="margin:0;font:600 17px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Because you finished Outer Wilds</h3>
+      <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">knowledge-gated, no combat, will ruin your week</span>
+      <div style="flex:1"></div>
+      <span style="font:500 11.5px/1 Inter,system-ui,sans-serif;color:#c44900">See all 24</span>
+    </div>
+    <div style="display:flex;gap:14px;padding:0 44px;overflow:hidden">
+      <sc-for list="{{ rowA }}" as="g" hint-placeholder-count="7">
+        <div style="flex:none;width:158px">
+          <div style="position:relative;aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#1b332f,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.09);display:flex;align-items:flex-end;padding:10px">
+            <span style="font:500 12px/1.25 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">{{ g.title }}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:7px">
+            <span style="font:500 12.5px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">{{ g.title }}</span>
+            <span style="font:600 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5)">{{ g.score }}</span>
+          </div>
+          <span style="display:block;margin-top:2px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.38)">{{ g.meta }}</span>
+        </div>
+      </sc-for>
+      <div style="flex:none;width:44px;align-self:stretch;margin-top:-0px;display:grid;place-items:center;border-radius:8px;background:linear-gradient(to right,transparent,rgba(4,21,31,.9));margin-left:-58px;position:relative;z-index:2">
+        <i class="ph ph-caret-right" style="font-size:20px;color:#efd6ac"></i>
+      </div>
+    </div>
+
+    <div style="height:1px;margin:30px 0;background:linear-gradient(to right,transparent,rgba(239,214,172,.14) 48px,rgba(239,214,172,.14) calc(100% - 48px),transparent)"></div>
+
+    <div style="padding:0 44px 12px;display:flex;align-items:baseline;gap:12px">
+      <h3 style="margin:0;font:600 17px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Weekend-sized</h3>
+      <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">under 10 hours, credits guaranteed</span>
+    </div>
+    <div style="display:flex;gap:14px;padding:0 44px 0">
+      <sc-for list="{{ rowB }}" as="g" hint-placeholder-count="5">
+        <div style="flex:none;width:236px">
+          <div style="position:relative;aspect-ratio:16/9;border-radius:8px;background:linear-gradient(150deg,#20302f,#0a1b23);box-shadow:inset 0 0 0 1px rgba(239,214,172,.09);display:flex;align-items:flex-end;padding:10px">
+            <span style="font:500 12px/1.2 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">wide art</span>
+            <span style="position:absolute;top:8px;right:8px;padding:3px 6px;border-radius:4px;background:rgba(4,21,31,.8);font:600 10.5px/1 Inter,system-ui,sans-serif;color:#efd6ac">{{ g.hours }}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+            <span style="font:500 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">{{ g.title }}</span>
+            <span style="font:600 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5)">{{ g.score }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Home — left rail shell, editorial magazine rows</div>
+<div class="dv-card" style="width:1280px">
+ <div style="display:flex;min-height:900px">
+  <aside style="width:212px;flex:none;padding:24px 16px;background:#020e15;border-right:1px solid rgba(239,214,172,.08)">
+    <span style="display:block;margin:0 8px 26px;font:700 14px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">L<span style="color:#c44900">3</span>ADERBOARD</span>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:rgba(196,73,0,.16);box-shadow:inset 0 0 0 1px rgba(196,73,0,.4);font:500 13px/1 Inter,system-ui,sans-serif;color:#efd6ac"><i class="ph ph-compass" style="font-size:16px"></i>Discover</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;font:400 13px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.62)"><i class="ph ph-game-controller" style="font-size:16px"></i>My library<span style="margin-left:auto;font:500 11px Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">412</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;font:400 13px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.62)"><i class="ph ph-stack-simple" style="font-size:16px"></i>Backlog<span style="margin-left:auto;font:500 11px Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">88</span></div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;font:400 13px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.62)"><i class="ph ph-squares-four" style="font-size:16px"></i>Collections</div>
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;font:400 13px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.62)"><i class="ph ph-users-three" style="font-size:16px"></i>Feed</div>
+    </div>
+    <div style="height:1px;margin:20px 4px;background:linear-gradient(to right,rgba(239,214,172,.14),transparent)"></div>
+    <span style="display:block;margin:0 10px 10px;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.4)">Collections</span>
+    <div style="display:flex;flex-direction:column;gap:1px">
+      <div style="padding:6px 10px;font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Cozy nights <span style="color:rgba(239,214,172,.3)">14</span></div>
+      <div style="padding:6px 10px;font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Steam sale sins <span style="color:rgba(239,214,172,.3)">37</span></div>
+      <div style="padding:6px 10px;font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Ran it back <span style="color:rgba(239,214,172,.3)">9</span></div>
+    </div>
+    <div style="margin-top:26px;padding:12px;border-radius:8px;background:rgba(24,58,55,.5);box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)">
+      <span style="display:block;font:500 12px/1.3 Inter,system-ui,sans-serif;color:#efd6ac">Steam sync</span>
+      <span style="display:block;margin:3px 0 9px;font:400 11px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5)">Last import 2 days ago · 412 titles</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;font:500 11.5px/1 Inter,system-ui,sans-serif;color:#c44900"><i class="ph ph-arrows-clockwise" style="font-size:13px"></i>Re-import</span>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;padding:0 0 40px">
+    <div style="display:flex;align-items:center;gap:16px;height:56px;padding:0 28px;border-bottom:1px solid rgba(239,214,172,.08)">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;max-width:420px;height:34px;padding:0 12px;border:1px solid rgba(239,214,172,.16);border-radius:8px">
+        <i class="ph ph-magnifying-glass" style="font-size:14px;color:rgba(239,214,172,.5)"></i>
+        <span style="font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">Search 870,000 games…</span>
+        <span style="margin-left:auto;padding:2px 5px;border-radius:4px;border:1px solid rgba(239,214,172,.16);font:500 10px/1 ui-monospace,Menlo,monospace;color:rgba(239,214,172,.4)">/</span>
+      </div>
+      <span style="font:500 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">+ Add manually</span>
+      <div style="width:28px;height:28px;border-radius:50%;background:#432534;box-shadow:inset 0 0 0 1px rgba(239,214,172,.2);display:grid;place-items:center;font:600 11px Inter,system-ui,sans-serif;color:#efd6ac">AP</div>
+    </div>
+
+    <div style="padding:26px 28px 0">
+      <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:16px">
+        <div style="position:relative;border-radius:10px;padding:24px;min-height:250px;background:linear-gradient(140deg,#432534 0%,#04151f 78%);box-shadow:inset 0 0 0 1px rgba(239,214,172,.1);display:flex;flex-direction:column;justify-content:flex-end">
+          <div style="position:absolute;inset:0;border-radius:10px;background:radial-gradient(90% 70% at 85% 15%,rgba(196,73,0,.3),transparent 60%)"></div>
+          <span style="position:relative;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#c44900">Feature</span>
+          <h2 style="position:relative;margin:10px 0 8px;font:600 30px/1.08 Inter,system-ui,sans-serif;letter-spacing:-.025em;color:#efd6ac">The 2025 backlog amnesty</h2>
+          <p style="position:relative;margin:0;max-width:380px;font:400 13px/1.55 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Twelve games worth dropping guilt-free, and four you actually should finish.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="flex:1;border-radius:10px;padding:18px;background:#0b2028;box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)">
+            <span style="font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(239,214,172,.45)">Trending now</span>
+            <div style="display:flex;flex-direction:column;gap:9px;margin-top:12px">
+              <div style="display:flex;align-items:center;gap:10px"><span style="font:700 15px/1 Inter,system-ui,sans-serif;color:#c44900;width:16px">1</span><div style="width:26px;height:38px;border-radius:4px;background:#1b332f"></div><span style="font:500 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">Blue Prince</span><span style="margin-left:auto;font:500 11.5px Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">8.7</span></div>
+              <div style="display:flex;align-items:center;gap:10px"><span style="font:700 15px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5);width:16px">2</span><div style="width:26px;height:38px;border-radius:4px;background:#1b332f"></div><span style="font:500 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">Balatro</span><span style="margin-left:auto;font:500 11.5px Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">9.0</span></div>
+              <div style="display:flex;align-items:center;gap:10px"><span style="font:700 15px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5);width:16px">3</span><div style="width:26px;height:38px;border-radius:4px;background:#1b332f"></div><span style="font:500 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">Dave the Diver</span><span style="margin-left:auto;font:500 11.5px Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">8.2</span></div>
+            </div>
+          </div>
+          <div style="border-radius:10px;padding:16px 18px;background:rgba(196,73,0,.1);box-shadow:inset 0 0 0 1px rgba(196,73,0,.32);display:flex;align-items:center;gap:12px">
+            <i class="ph ph-twitch-logo" style="font-size:22px;color:#c44900"></i>
+            <div><span style="display:block;font:500 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">42 live channels</span><span style="display:block;font:400 11.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)">playing games from your backlog</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:1px;margin:30px 0 22px;background:linear-gradient(to right,transparent,rgba(239,214,172,.14) 48px,rgba(239,214,172,.14) calc(100% - 48px),transparent)"></div>
+
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:14px">
+        <h3 style="margin:0;font:600 16px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">New this month</h3>
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:6px">
+          <div style="width:26px;height:26px;border-radius:6px;display:grid;place-items:center;border:1px solid rgba(239,214,172,.16)"><i class="ph ph-caret-left" style="font-size:12px;color:rgba(239,214,172,.55)"></i></div>
+          <div style="width:26px;height:26px;border-radius:6px;display:grid;place-items:center;border:1px solid rgba(239,214,172,.16)"><i class="ph ph-caret-right" style="font-size:12px;color:#efd6ac"></i></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;overflow:hidden">
+        <sc-for list="{{ rowC }}" as="g" hint-placeholder-count="6">
+          <div style="flex:none;width:150px">
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#1b332f,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.09);display:flex;align-items:flex-end;padding:9px">
+              <span style="font:500 11.5px/1.25 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">{{ g.title }}</span>
+            </div>
+            <span style="display:block;margin-top:7px;font:500 12.5px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">{{ g.title }}</span>
+            <span style="display:block;margin-top:2px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.38)">{{ g.meta }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;align-items:baseline;gap:12px;margin:28px 0 14px">
+        <h3 style="margin:0;font:600 16px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Certified backlog bait</h3>
+        <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">80+ hours, bought on sale, never opened</span>
+      </div>
+      <div style="display:flex;gap:12px;overflow:hidden">
+        <sc-for list="{{ rowD }}" as="g" hint-placeholder-count="6">
+          <div style="flex:none;width:150px">
+            <div style="aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#24363a,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.09);display:flex;align-items:flex-end;padding:9px">
+              <span style="font:500 11.5px/1.25 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">{{ g.title }}</span>
+            </div>
+            <span style="display:block;margin-top:7px;font:500 12.5px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">{{ g.title }}</span>
+            <span style="display:block;margin-top:2px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.38)">{{ g.meta }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </main>
+ </div>
+</div></div>
+
+<div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Profile — stat band across the top, top 4 as heroes</div>
+<div class="dv-card" style="width:1280px">
+  <div style="display:flex;align-items:center;gap:28px;height:56px;padding:0 28px;background:rgba(4,21,31,.92);border-bottom:1px solid rgba(239,214,172,.09)">
+    <span style="font:700 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">L<span style="color:#c44900">3</span>ADERBOARD</span>
+    <nav style="display:flex;gap:20px;font:500 13px/1 Inter,system-ui,sans-serif">
+      <span style="color:rgba(239,214,172,.55)">Discover</span>
+      <span style="color:#efd6ac;padding-bottom:3px;border-bottom:2px solid #c44900">Library</span>
+      <span style="color:rgba(239,214,172,.55)">Collections</span>
+      <span style="color:rgba(239,214,172,.55)">Feed</span>
+    </nav>
+    <div style="flex:1"></div>
+    <span style="font:500 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Search</span>
+    <div style="width:28px;height:28px;border-radius:50%;background:#432534;box-shadow:inset 0 0 0 1px rgba(239,214,172,.2);display:grid;place-items:center;font:600 11px Inter,system-ui,sans-serif;color:#efd6ac">AP</div>
+  </div>
+
+  <div style="padding:34px 44px 0;background:linear-gradient(180deg,rgba(24,58,55,.55),transparent 88%)">
+    <div style="display:flex;align-items:flex-start;gap:20px">
+      <div style="width:76px;height:76px;flex:none;border-radius:50%;background:linear-gradient(150deg,#432534,#183a37);box-shadow:inset 0 0 0 1px rgba(239,214,172,.22);display:grid;place-items:center;font:600 26px Inter,system-ui,sans-serif;color:#efd6ac">AP</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:10px">
+          <h1 style="margin:0;font:600 30px/1 Inter,system-ui,sans-serif;letter-spacing:-.025em;color:#efd6ac">arya</h1>
+          <span style="padding:3px 7px;border-radius:5px;background:rgba(196,73,0,.16);box-shadow:inset 0 0 0 1px rgba(196,73,0,.4);font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#c44900">Steam linked</span>
+        </div>
+        <p style="margin:8px 0 0;max-width:440px;font:400 13px/1.55 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Will finish it, eventually. Immersive sims and card games. Currently 40 hours deep into a game I rated 6.</p>
+        <div style="display:flex;gap:16px;margin-top:12px;font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)">
+          <span><b style="color:#efd6ac;font-weight:600">184</b> following</span>
+          <span><b style="color:#efd6ac;font-weight:600">231</b> followers</span>
+          <span>joined Mar 2024</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:9px">
+        <button style="height:34px;padding:0 14px;border-radius:8px;border:1px solid rgba(239,214,172,.22);background:transparent;color:#efd6ac;font:500 12.5px/1 Inter,system-ui,sans-serif;cursor:pointer">Edit profile</button>
+        <button style="display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:8px;border:1px solid #c44900;background:rgba(196,73,0,.14);color:#efd6ac;font:500 12.5px/1 Inter,system-ui,sans-serif;cursor:pointer"><i class="ph ph-arrows-clockwise" style="font-size:13px"></i>Sync Steam</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:30px 0 0;padding:22px 0;border-top:1px solid rgba(239,214,172,.12);border-bottom:1px solid rgba(239,214,172,.12)">
+      <div style="padding-right:24px">
+        <span style="display:block;font:600 44px/1 Inter,system-ui,sans-serif;letter-spacing:-.03em;color:#efd6ac">412</span>
+        <span style="display:block;margin-top:6px;font:600 10.5px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.45)">Games logged</span>
+        <span style="display:block;margin-top:5px;font:400 11.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">148 completed · 88 backlog · 41 dropped</span>
+      </div>
+      <div style="padding:0 24px;border-left:1px solid rgba(239,214,172,.12)">
+        <span style="display:block;font:600 44px/1 Inter,system-ui,sans-serif;letter-spacing:-.03em;color:#efd6ac">3,847<span style="font-size:20px;color:rgba(239,214,172,.5);letter-spacing:0"> hrs</span></span>
+        <span style="display:block;margin-top:6px;font:600 10.5px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.45)">Hours played</span>
+        <span style="display:block;margin-top:5px;font:400 11.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">160 days of your life · 9.3 hrs avg per game</span>
+      </div>
+      <div style="padding-left:24px;border-left:1px solid rgba(239,214,172,.12)">
+        <span style="display:block;font:600 44px/1 Inter,system-ui,sans-serif;letter-spacing:-.03em;color:#efd6ac">96</span>
+        <span style="display:block;margin-top:6px;font:600 10.5px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.45)">Reviews written</span>
+        <span style="display:block;margin-top:5px;font:400 11.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">avg rating 7.2 · harshest score: 2</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:30px 44px 0">
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
+      <h3 style="margin:0;font:600 16px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Top 4</h3>
+      <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">the ones you'd defend in an argument</span>
+      <div style="flex:1"></div>
+      <span style="display:inline-flex;align-items:center;gap:5px;font:500 11.5px/1 Inter,system-ui,sans-serif;color:#c44900"><i class="ph ph-pencil-simple" style="font-size:12px"></i>Edit</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+      <sc-for list="{{ topFour }}" as="g" hint-placeholder-count="4">
+        <div>
+          <div style="position:relative;aspect-ratio:3/4;border-radius:10px;background:linear-gradient(160deg,#1e3f3b,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.12);display:flex;align-items:flex-end;padding:12px">
+            <span style="font:500 12px/1.25 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">cover placeholder</span>
+            <span style="position:absolute;top:10px;left:10px;padding:3px 7px;border-radius:5px;background:rgba(4,21,31,.85);font:600 11px/1 Inter,system-ui,sans-serif;color:#c44900">{{ g.score }}</span>
+          </div>
+          <span style="display:block;margin-top:9px;font:500 13.5px/1.25 Inter,system-ui,sans-serif;color:#efd6ac">{{ g.title }}</span>
+          <span style="display:block;margin-top:3px;font:400 11.5px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">{{ g.meta }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="height:1px;margin:32px 0 22px;background:linear-gradient(to right,transparent,rgba(239,214,172,.14) 48px,rgba(239,214,172,.14) calc(100% - 48px),transparent)"></div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+      <h3 style="margin:0;font:600 16px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Library</h3>
+      <span style="font:400 12px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">412 games</span>
+      <div style="flex:1"></div>
+      <div style="display:flex;gap:6px">
+        <span style="padding:5px 11px;border-radius:20px;background:rgba(196,73,0,.16);box-shadow:inset 0 0 0 1px rgba(196,73,0,.4);font:500 12px/1 Inter,system-ui,sans-serif;color:#efd6ac">All 412</span>
+        <span style="padding:5px 11px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 12px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Playing 12</span>
+        <span style="padding:5px 11px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 12px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Completed 148</span>
+        <span style="padding:5px 11px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 12px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Backlog 88</span>
+        <span style="padding:5px 11px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 12px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Dropped 41</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:14px;padding-bottom:40px">
+      <sc-for list="{{ library }}" as="g" hint-placeholder-count="16">
+        <div>
+          <div style="position:relative;aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#1b332f,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)">
+            <span style="position:absolute;bottom:8px;left:8px;right:8px;font:500 11px/1.25 Inter,system-ui,sans-serif;color:rgba(239,214,172,.38)">{{ g.title }}</span>
+            <span style="position:absolute;top:7px;left:7px;width:7px;height:7px;border-radius:50%;background:{{ g.dot }}"></span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px">
+            <span style="font:500 11.5px/1.2 Inter,system-ui,sans-serif;color:rgba(239,214,172,.85);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ g.title }}</span>
+            <span style="font:600 10.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">{{ g.score }}</span>
+          </div>
+          <span style="display:block;margin-top:2px;font:400 10.5px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.34)">{{ g.hours }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Profile — stats as a sidebar card, library as a dense list</div>
+<div class="dv-card" style="width:1280px">
+  <div style="display:flex;align-items:center;gap:28px;height:56px;padding:0 28px;border-bottom:1px solid rgba(239,214,172,.09)">
+    <span style="font:700 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">L<span style="color:#c44900">3</span>ADERBOARD</span>
+    <div style="flex:1"></div>
+    <div style="width:28px;height:28px;border-radius:50%;background:#432534;box-shadow:inset 0 0 0 1px rgba(239,214,172,.2);display:grid;place-items:center;font:600 11px Inter,system-ui,sans-serif;color:#efd6ac">AP</div>
+  </div>
+  <div style="display:grid;grid-template-columns:296px 1fr;gap:0;min-height:880px">
+    <aside style="padding:28px 24px;border-right:1px solid rgba(239,214,172,.08);background:linear-gradient(180deg,rgba(67,37,52,.4),transparent 60%)">
+      <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(150deg,#432534,#183a37);box-shadow:inset 0 0 0 1px rgba(239,214,172,.22);display:grid;place-items:center;font:600 22px Inter,system-ui,sans-serif;color:#efd6ac">AP</div>
+      <h1 style="margin:14px 0 4px;font:600 24px/1 Inter,system-ui,sans-serif;letter-spacing:-.025em;color:#efd6ac">arya</h1>
+      <span style="display:block;font:400 12px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">@arya-pradhan · joined Mar 2024</span>
+      <p style="margin:12px 0 0;font:400 12.5px/1.55 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Immersive sims and card games. Will finish it, eventually.</p>
+      <div style="display:flex;gap:8px;margin:14px 0 0">
+        <button style="height:32px;padding:0 12px;border-radius:8px;border:1px solid rgba(239,214,172,.22);background:transparent;color:#efd6ac;font:500 12px/1 Inter,system-ui,sans-serif;cursor:pointer">Edit profile</button>
+        <button style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #c44900;background:rgba(196,73,0,.14);color:#efd6ac;font:500 12px/1 Inter,system-ui,sans-serif;cursor:pointer">Sync Steam</button>
+      </div>
+
+      <div style="margin-top:24px;border-radius:10px;background:#0b2028;box-shadow:inset 0 0 0 1px rgba(239,214,172,.09);overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(239,214,172,.08)">
+          <span style="display:block;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Games logged</span>
+          <span style="display:block;margin-top:5px;font:600 26px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">412</span>
+          <div style="display:flex;height:5px;margin-top:10px;border-radius:3px;overflow:hidden">
+            <span style="width:36%;background:#c44900"></span><span style="width:21%;background:#efd6ac"></span><span style="width:10%;background:#432534"></span><span style="flex:1;background:rgba(239,214,172,.14)"></span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;font:400 10.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5)">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:2px;background:#c44900"></span>148 completed</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:2px;background:#efd6ac"></span>88 backlog</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:6px;height:6px;border-radius:2px;background:#432534"></span>41 dropped</span>
+          </div>
+        </div>
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(239,214,172,.08)">
+          <span style="display:block;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Hours played</span>
+          <span style="display:block;margin-top:5px;font:600 26px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">3,847</span>
+          <div style="display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:10px">
+            <span style="flex:1;height:38%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:62%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:44%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:78%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:100%;background:#c44900;border-radius:2px 2px 0 0"></span><span style="flex:1;height:55%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:30%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:47%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:66%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:22%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:41%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span><span style="flex:1;height:18%;background:rgba(196,73,0,.5);border-radius:2px 2px 0 0"></span>
+          </div>
+          <span style="display:block;margin-top:7px;font:400 10.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">by month · peak 214 hrs in May</span>
+        </div>
+        <div style="padding:14px 16px">
+          <span style="display:block;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Reviews written</span>
+          <span style="display:block;margin-top:5px;font:600 26px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">96</span>
+          <span style="display:block;margin-top:7px;font:400 10.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">avg rating 7.2 / 10 · 23% of your logs</span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px">
+        <span style="display:block;margin-bottom:9px;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Collections</span>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span style="padding:5px 10px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.7)">Cozy nights 14</span>
+          <span style="padding:5px 10px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.7)">Steam sale sins 37</span>
+          <span style="padding:5px 10px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.7)">Ran it back 9</span>
+          <span style="padding:5px 10px;border-radius:20px;box-shadow:inset 0 0 0 1px rgba(196,73,0,.4);font:500 11.5px/1 Inter,system-ui,sans-serif;color:#c44900">+ New</span>
+        </div>
+      </div>
+    </aside>
+
+    <main style="padding:28px 32px">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:13px">
+        <h3 style="margin:0;font:600 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Top 4</h3>
+        <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">drag to reorder</span>
+      </div>
+      <div style="display:flex;gap:12px">
+        <sc-for list="{{ topFour }}" as="g" hint-placeholder-count="4">
+          <div style="width:132px">
+            <div style="position:relative;aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#1e3f3b,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.14)">
+              <span style="position:absolute;bottom:8px;left:8px;font:500 11px/1.2 Inter,system-ui,sans-serif;color:rgba(239,214,172,.38)">{{ g.title }}</span>
+            </div>
+            <span style="display:block;margin-top:7px;font:500 12px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">{{ g.title }}</span>
+          </div>
+        </sc-for>
+        <div style="width:132px;aspect-ratio:2/3;border-radius:8px;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(239,214,172,.14);background:repeating-linear-gradient(135deg,rgba(239,214,172,.04) 0 2px,transparent 2px 8px)">
+          <i class="ph ph-plus" style="font-size:18px;color:rgba(239,214,172,.4)"></i>
+        </div>
+      </div>
+
+      <div style="height:1px;margin:26px 0 20px;background:linear-gradient(to right,transparent,rgba(239,214,172,.14) 48px,rgba(239,214,172,.14) calc(100% - 48px),transparent)"></div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <h3 style="margin:0;font:600 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Recent activity</h3>
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:5px">
+          <span style="padding:4px 10px;border-radius:6px;background:rgba(196,73,0,.16);box-shadow:inset 0 0 0 1px rgba(196,73,0,.4);font:500 11.5px/1 Inter,system-ui,sans-serif;color:#efd6ac">List</span>
+          <span style="padding:4px 10px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)">Grid</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 92px 78px 118px 92px;gap:0;padding:0 10px 8px;border-bottom:1px solid rgba(239,214,172,.12);font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:rgba(239,214,172,.4)">
+        <span>Game</span><span>Status</span><span>Rating</span><span>Hours</span><span>Source</span>
+      </div>
+      <sc-for list="{{ rows }}" as="r" hint-placeholder-count="9">
+        <div style="display:grid;grid-template-columns:1fr 92px 78px 118px 92px;align-items:center;gap:0;padding:10px;border-bottom:1px solid rgba(239,214,172,.06)">
+          <div style="display:flex;align-items:center;gap:11px;min-width:0">
+            <div style="width:32px;height:44px;flex:none;border-radius:4px;background:linear-gradient(160deg,#1b332f,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)"></div>
+            <div style="min-width:0">
+              <span style="display:block;font:500 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">{{ r.title }}</span>
+              <span style="display:block;margin-top:2px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.meta }}</span>
+            </div>
+          </div>
+          <span style="justify-self:start;padding:3px 8px;border-radius:5px;background:{{ r.statusBg }};font:500 11px/1.35 Inter,system-ui,sans-serif;color:{{ r.statusFg }}">{{ r.status }}</span>
+          <span style="font:600 12.5px/1 Inter,system-ui,sans-serif;color:#efd6ac">{{ r.rating }}</span>
+          <div>
+            <span style="display:block;font:400 12px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.7)">{{ r.hours }}</span>
+            <div style="height:3px;width:70px;margin-top:5px;border-radius:2px;background:rgba(239,214,172,.12)"><span style="display:block;height:3px;border-radius:2px;background:#c44900;width:{{ r.bar }}"></span></div>
+          </div>
+          <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">{{ r.source }}</span>
+        </div>
+      </sc-for>
+      <span style="display:inline-block;margin-top:16px;font:500 12px/1 Inter,system-ui,sans-serif;color:#c44900">Show all 412 →</span>
+    </main>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Game page — detail, reviews, Twitch live channels</div>
+<div class="dv-card" style="width:1280px">
+  <div style="display:flex;align-items:center;gap:28px;height:56px;padding:0 28px;border-bottom:1px solid rgba(239,214,172,.09)">
+    <span style="font:700 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">L<span style="color:#c44900">3</span>ADERBOARD</span>
+    <div style="flex:1"></div>
+    <span style="font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.5)">Discover / Action RPG / Elden Ring</span>
+  </div>
+
+  <div style="position:relative;padding:32px 44px 26px;background:linear-gradient(120deg,#183a37,#04151f 70%)">
+    <div style="position:absolute;inset:0;background:radial-gradient(100% 80% at 20% 0%,rgba(196,73,0,.22),transparent 60%)"></div>
+    <div style="position:relative;display:flex;gap:26px">
+      <div style="width:206px;flex:none;aspect-ratio:2/3;border-radius:10px;background:linear-gradient(160deg,#1e3f3b,#0b1c25);box-shadow:0 18px 44px rgba(0,0,0,.5),inset 0 0 0 1px rgba(239,214,172,.14);display:flex;align-items:flex-end;padding:12px">
+        <span style="font:500 12px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">cover · from RAWG</span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <h1 style="margin:0 0 8px;font:600 40px/1.02 Inter,system-ui,sans-serif;letter-spacing:-.03em;color:#efd6ac">Elden Ring</h1>
+        <div style="display:flex;align-items:center;gap:12px;font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)">
+          <span>2022</span><span style="width:1px;height:10px;background:rgba(239,214,172,.2)"></span><span>FromSoftware</span><span style="width:1px;height:10px;background:rgba(239,214,172,.2)"></span><span>PC · PS5 · Xbox Series</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 18px">
+          <span style="padding:4px 9px;border-radius:5px;background:rgba(239,214,172,.08);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.72)">Action RPG</span>
+          <span style="padding:4px 9px;border-radius:5px;background:rgba(239,214,172,.08);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.72)">Open world</span>
+          <span style="padding:4px 9px;border-radius:5px;background:rgba(239,214,172,.08);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.72)">Souls-like</span>
+          <span style="padding:4px 9px;border-radius:5px;background:rgba(239,214,172,.08);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.72)">Co-op</span>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:32px;margin-bottom:20px">
+          <div>
+            <span style="display:block;font:600 42px/1 Inter,system-ui,sans-serif;letter-spacing:-.03em;color:#efd6ac">9.2<span style="font-size:17px;color:rgba(239,214,172,.4)">/10</span></span>
+            <span style="display:block;margin-top:5px;font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">18,402 ratings</span>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:3px;height:52px">
+            <sc-for list="{{ dist }}" as="d" hint-placeholder-count="10">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:20px">
+                <span style="width:100%;border-radius:2px 2px 0 0;background:{{ d.fill }};height:{{ d.h }}"></span>
+                <span style="font:400 9.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.35)">{{ d.n }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding-left:26px;border-left:1px solid rgba(239,214,172,.14)">
+            <span style="display:block;font:600 19px/1 Inter,system-ui,sans-serif;color:#efd6ac">58.4 hrs</span>
+            <span style="display:block;margin-top:4px;font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">median to credits</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:9px">
+          <button style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:8px;border:1px solid #c44900;background:rgba(196,73,0,.16);color:#efd6ac;font:500 13px/1 Inter,system-ui,sans-serif;cursor:pointer"><i class="ph ph-plus" style="font-size:14px"></i>Add to library</button>
+          <button style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:8px;border:1px solid rgba(239,214,172,.22);background:transparent;color:#efd6ac;font:500 13px/1 Inter,system-ui,sans-serif;cursor:pointer"><i class="ph ph-stack-simple" style="font-size:14px"></i>Backlog</button>
+          <button style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 15px;border-radius:8px;border:1px solid rgba(239,214,172,.22);background:transparent;color:#efd6ac;font:500 13px/1 Inter,system-ui,sans-serif;cursor:pointer"><i class="ph ph-star" style="font-size:14px"></i>Rate &amp; review</button>
+          <button style="display:grid;place-items:center;width:38px;height:38px;border-radius:8px;border:1px solid rgba(239,214,172,.16);background:transparent;color:rgba(239,214,172,.7);cursor:pointer"><i class="ph ph-dots-three" style="font-size:16px"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 322px;gap:34px;padding:28px 44px 40px">
+    <div style="min-width:0">
+      <p style="margin:0 0 22px;max-width:620px;font:400 14px/1.65 Inter,system-ui,sans-serif;color:rgba(239,214,172,.68);text-wrap:pretty">A vast open world of shattered kingdoms, ruined castles and things that will kill you in two hits. Description text comes through from RAWG's game endpoint.</p>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <h3 style="margin:0;font:600 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Reviews</h3>
+        <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">4,118 written</span>
+        <div style="flex:1"></div>
+        <div style="display:flex;gap:5px">
+          <span style="padding:4px 10px;border-radius:6px;background:rgba(196,73,0,.16);box-shadow:inset 0 0 0 1px rgba(196,73,0,.4);font:500 11.5px/1 Inter,system-ui,sans-serif;color:#efd6ac">Friends</span>
+          <span style="padding:4px 10px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)">Popular</span>
+          <span style="padding:4px 10px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)">Recent</span>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:0">
+        <sc-for list="{{ reviews }}" as="r" hint-placeholder-count="3">
+          <div style="padding:16px 0;border-top:1px solid rgba(239,214,172,.09)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+              <div style="width:28px;height:28px;border-radius:50%;background:{{ r.avatarBg }};box-shadow:inset 0 0 0 1px rgba(239,214,172,.18);display:grid;place-items:center;font:600 10.5px Inter,system-ui,sans-serif;color:#efd6ac">{{ r.initials }}</div>
+              <span style="font:500 13px/1 Inter,system-ui,sans-serif;color:#efd6ac">{{ r.user }}</span>
+              <span style="padding:2px 7px;border-radius:5px;background:rgba(196,73,0,.14);font:600 11px/1.4 Inter,system-ui,sans-serif;color:#c44900">{{ r.rating }}</span>
+              <span style="font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">{{ r.meta }}</span>
+              <div style="flex:1"></div>
+              <span style="display:flex;align-items:center;gap:5px;font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)"><i class="ph ph-heart" style="font-size:13px"></i>{{ r.likes }}</span>
+            </div>
+            <p style="margin:0;max-width:620px;font:400 13.5px/1.6 Inter,system-ui,sans-serif;color:rgba(239,214,172,.66);text-wrap:pretty">{{ r.text }}</p>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="height:1px;margin:26px 0 20px;background:linear-gradient(to right,transparent,rgba(239,214,172,.14) 48px,rgba(239,214,172,.14) calc(100% - 48px),transparent)"></div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <i class="ph-fill ph-twitch-logo" style="font-size:18px;color:#c44900"></i>
+        <h3 style="margin:0;font:600 15px/1 Inter,system-ui,sans-serif;letter-spacing:-.02em;color:#efd6ac">Live on Twitch</h3>
+        <span style="display:flex;align-items:center;gap:5px;font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)"><span style="width:6px;height:6px;border-radius:50%;background:#c44900"></span>19.4k watching now</span>
+        <div style="flex:1"></div>
+        <span style="font:500 11.5px/1 Inter,system-ui,sans-serif;color:#c44900">Open on Twitch →</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px">
+        <sc-for list="{{ streams }}" as="s" hint-placeholder-count="4">
+          <div style="border-radius:9px;overflow:hidden;background:#0b2028;box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)">
+            <div style="position:relative;aspect-ratio:16/9;background:linear-gradient(150deg,#1d3238,#08161d);display:grid;place-items:center">
+              <i class="ph ph-play-circle" style="font-size:30px;color:rgba(239,214,172,.28)"></i>
+              <span style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:5px;padding:3px 7px;border-radius:4px;background:rgba(196,73,0,.9);font:600 10px/1.4 Inter,system-ui,sans-serif;color:#efd6ac">LIVE</span>
+              <span style="position:absolute;bottom:8px;right:8px;padding:3px 7px;border-radius:4px;background:rgba(4,21,31,.85);font:500 10.5px/1.3 Inter,system-ui,sans-serif;color:#efd6ac">{{ s.viewers }}</span>
+            </div>
+            <div style="padding:11px 13px">
+              <span style="display:block;font:500 12.5px/1.3 Inter,system-ui,sans-serif;color:#efd6ac">{{ s.title }}</span>
+              <span style="display:block;margin-top:4px;font:400 11.5px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">{{ s.channel }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <aside style="display:flex;flex-direction:column;gap:16px">
+      <div style="border-radius:10px;padding:16px;background:rgba(196,73,0,.09);box-shadow:inset 0 0 0 1px rgba(196,73,0,.3)">
+        <span style="display:block;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:#c44900">In your library</span>
+        <span style="display:block;margin:9px 0 3px;font:500 14px/1.3 Inter,system-ui,sans-serif;color:#efd6ac">Playing · 41.2 hrs</span>
+        <span style="display:block;font:400 11.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.55)">imported from Steam · updated 3 days ago</span>
+        <div style="display:flex;gap:6px;margin-top:12px">
+          <span style="padding:5px 10px;border-radius:6px;background:rgba(196,73,0,.2);font:500 11.5px/1 Inter,system-ui,sans-serif;color:#efd6ac">Playing</span>
+          <span style="padding:5px 10px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Completed</span>
+          <span style="padding:5px 10px;border-radius:6px;box-shadow:inset 0 0 0 1px rgba(239,214,172,.16);font:400 11.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Dropped</span>
+        </div>
+      </div>
+      <div style="border-radius:10px;padding:16px;background:#0b2028;box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)">
+        <span style="display:block;margin-bottom:11px;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Friends who played</span>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ friends }}" as="f" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:9px">
+              <div style="width:24px;height:24px;border-radius:50%;background:{{ f.bg }};box-shadow:inset 0 0 0 1px rgba(239,214,172,.18);display:grid;place-items:center;font:600 9.5px Inter,system-ui,sans-serif;color:#efd6ac">{{ f.initials }}</div>
+              <span style="font:400 12.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.8)">{{ f.name }}</span>
+              <div style="flex:1"></div>
+              <span style="font:600 12px/1 Inter,system-ui,sans-serif;color:#efd6ac">{{ f.rating }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <div style="border-radius:10px;padding:16px;background:#0b2028;box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)">
+        <span style="display:block;margin-bottom:11px;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">If you liked this</span>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <sc-for list="{{ similar }}" as="s" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="width:30px;height:42px;border-radius:4px;background:#1b332f;box-shadow:inset 0 0 0 1px rgba(239,214,172,.09)"></div>
+              <div style="min-width:0">
+                <span style="display:block;font:500 12.5px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">{{ s.title }}</span>
+                <span style="display:block;margin-top:2px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">{{ s.why }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="1f"><div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Game card — three treatments, same data</div>
+<div class="dv-card" style="width:660px;padding:26px">
+  <div style="display:flex;gap:22px;align-items:flex-start">
+    <div>
+      <span style="display:block;margin-bottom:10px;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Poster</span>
+      <div style="width:170px">
+        <div style="position:relative;aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#1b332f,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.1)">
+          <span style="position:absolute;top:8px;right:8px;padding:3px 6px;border-radius:4px;background:rgba(4,21,31,.85);font:600 10.5px/1.3 Inter,system-ui,sans-serif;color:#c44900">8.9</span>
+          <span style="position:absolute;bottom:10px;left:10px;font:500 11.5px/1.25 Inter,system-ui,sans-serif;color:rgba(239,214,172,.38)">cover</span>
+        </div>
+        <span style="display:block;margin-top:8px;font:500 13px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">Disco Elysium</span>
+        <span style="display:block;margin-top:3px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">2019 · RPG · 32 hrs</span>
+      </div>
+    </div>
+    <div>
+      <span style="display:block;margin-bottom:10px;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Hover state</span>
+      <div style="width:170px;position:relative">
+        <div style="position:relative;aspect-ratio:2/3;border-radius:8px;background:linear-gradient(160deg,#22423d,#0b1c25);box-shadow:0 0 0 1px rgba(196,73,0,.55),0 14px 30px rgba(0,0,0,.5);overflow:hidden">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(4,21,31,.94) 45%,transparent);display:flex;flex-direction:column;justify-content:flex-end;padding:11px;gap:8px">
+            <span style="font:500 12.5px/1.25 Inter,system-ui,sans-serif;color:#efd6ac">Disco Elysium</span>
+            <div style="display:flex;gap:5px">
+              <span style="flex:1;display:grid;place-items:center;height:26px;border-radius:6px;border:1px solid #c44900;background:rgba(196,73,0,.22);font:500 11px/1 Inter,system-ui,sans-serif;color:#efd6ac">+ Library</span>
+              <span style="display:grid;place-items:center;width:26px;height:26px;border-radius:6px;border:1px solid rgba(239,214,172,.28)"><i class="ph ph-stack-simple" style="font-size:12px;color:#efd6ac"></i></span>
+              <span style="display:grid;place-items:center;width:26px;height:26px;border-radius:6px;border:1px solid rgba(239,214,172,.28)"><i class="ph ph-star" style="font-size:12px;color:#efd6ac"></i></span>
+            </div>
+          </div>
+        </div>
+        <span style="display:block;margin-top:8px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">actions appear on hover</span>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <span style="display:block;margin-bottom:10px;font:600 10px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:rgba(239,214,172,.42)">Data-forward</span>
+      <div style="border-radius:9px;padding:13px;background:#0b2028;box-shadow:inset 0 0 0 1px rgba(239,214,172,.1);display:flex;gap:12px">
+        <div style="width:52px;height:74px;flex:none;border-radius:5px;background:linear-gradient(160deg,#1b332f,#0b1c25);box-shadow:inset 0 0 0 1px rgba(239,214,172,.1)"></div>
+        <div style="min-width:0;flex:1">
+          <div style="display:flex;align-items:baseline;gap:8px">
+            <span style="font:500 13.5px/1.2 Inter,system-ui,sans-serif;color:#efd6ac">Disco Elysium</span>
+            <span style="font:600 12px/1 Inter,system-ui,sans-serif;color:#c44900">8.9</span>
+          </div>
+          <span style="display:block;margin-top:3px;font:400 11px/1.3 Inter,system-ui,sans-serif;color:rgba(239,214,172,.42)">2019 · RPG · Detective</span>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:9px">
+            <div style="flex:1;height:4px;border-radius:2px;background:rgba(239,214,172,.12)"><span style="display:block;width:74%;height:4px;border-radius:2px;background:#c44900"></span></div>
+            <span style="font:400 10.5px/1 Inter,system-ui,sans-serif;color:rgba(239,214,172,.45)">24/32 hrs</span>
+          </div>
+          <div style="display:flex;gap:5px;margin-top:10px">
+            <span style="padding:3px 8px;border-radius:5px;background:rgba(196,73,0,.16);font:500 10.5px/1.4 Inter,system-ui,sans-serif;color:#c44900">Playing</span>
+            <span style="padding:3px 8px;border-radius:5px;background:rgba(239,214,172,.08);font:400 10.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Steam</span>
+            <span style="padding:3px 8px;border-radius:5px;background:rgba(239,214,172,.08);font:400 10.5px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.6)">Cozy nights</span>
+          </div>
+        </div>
+      </div>
+      <span style="display:block;margin-top:8px;font:400 11px/1.4 Inter,system-ui,sans-serif;color:rgba(239,214,172,.4)">for library lists and search results, where status and hours matter more than art</span>
+    </div>
+  </div>
+</div></div>
+
+</div>
+<p class="dv-next">Try next: "keep <a class="dv-oid" href="#1a">1a</a>'s hero but <a class="dv-oid" href="#1b">1b</a>'s left rail" · "push <a class="dv-oid" href="#1c">1c</a>'s stat band bigger" · "now do search results and the Steam import flow"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{}">
+const G = (title, meta, score, hours) => ({ title, meta, score, hours });
+
+class Component extends DCLogic {
+  renderVals() {
+    const st = {
+      playing: ["rgba(196,73,0,.18)", "#c44900"],
+      completed: ["rgba(239,214,172,.14)", "#efd6ac"],
+      backlog: ["rgba(24,58,55,.9)", "rgba(239,214,172,.7)"],
+      dropped: ["rgba(67,37,52,.8)", "rgba(239,214,172,.55)"],
+    };
+    const dotFor = { playing: "#c44900", completed: "#efd6ac", backlog: "rgba(239,214,172,.35)", dropped: "#432534" };
+
+    const libTitles = [
+      ["Elden Ring", "playing", "9", "41.2 hrs"], ["Balatro", "completed", "9", "88.4 hrs"],
+      ["Hades II", "playing", "8", "26.0 hrs"], ["Outer Wilds", "completed", "10", "24.6 hrs"],
+      ["Disco Elysium", "completed", "9", "32.1 hrs"], ["Blue Prince", "playing", "8", "12.8 hrs"],
+      ["Stardew Valley", "playing", "8", "214.0 hrs"], ["Tunic", "completed", "8", "18.3 hrs"],
+      ["Cyberpunk 2077", "dropped", "6", "40.5 hrs"], ["Baldur's Gate 3", "backlog", "—", "0 hrs"],
+      ["Sekiro", "completed", "9", "44.9 hrs"], ["Celeste", "completed", "9", "16.2 hrs"],
+      ["Dave the Diver", "completed", "8", "31.7 hrs"], ["Slay the Spire", "playing", "8", "121.5 hrs"],
+      ["Return of the Obra Dinn", "completed", "9", "9.4 hrs"], ["Death Stranding", "backlog", "—", "0 hrs"],
+    ];
+
+    return {
+      rowA: [
+        G("Blue Prince", "2025 · Puzzle", "8.7"), G("Return of the Obra Dinn", "2018 · Mystery", "9.0"),
+        G("Tunic", "2022 · Adventure", "8.6"), G("The Case of the Golden Idol", "2022 · Puzzle", "8.4"),
+        G("Chants of Sennaar", "2023 · Puzzle", "8.2"), G("Animal Well", "2024 · Metroidvania", "8.8"),
+        G("Void Stranger", "2023 · Puzzle", "8.5"),
+      ],
+      rowB: [
+        { title: "Celeste", score: "9.1", hours: "9 hrs" }, { title: "Inside", score: "8.9", hours: "4 hrs" },
+        { title: "Firewatch", score: "8.0", hours: "5 hrs" }, { title: "Gorogoa", score: "8.3", hours: "2 hrs" },
+        { title: "A Short Hike", score: "8.7", hours: "2 hrs" },
+      ],
+      rowC: [
+        G("Silksong", "2025 · Platformer", "9.1"), G("Blue Prince", "2025 · Puzzle", "8.7"),
+        G("Clair Obscur", "2025 · RPG", "9.0"), G("Split Fiction", "2025 · Co-op", "8.5"),
+        G("Monster Hunter Wilds", "2025 · Action", "8.2"), G("Kingdom Come II", "2025 · RPG", "8.6"),
+      ],
+      rowD: [
+        G("Baldur's Gate 3", "122 hrs · unopened", "9.4"), G("Persona 5 Royal", "104 hrs · unopened", "9.2"),
+        G("Death Stranding", "66 hrs · 1.2 played", "8.1"), G("Yakuza 0", "58 hrs · unopened", "9.0"),
+        G("Witcher 3", "103 hrs · 2.4 played", "9.3"), G("Xenoblade 3", "89 hrs · unopened", "8.7"),
+      ],
+      topFour: [
+        G("Outer Wilds", "logged Jun 2024 · 24 hrs", "10"), G("Disco Elysium", "logged Jan 2024 · 32 hrs", "9"),
+        G("Hollow Knight", "logged Nov 2023 · 51 hrs", "9"), G("Balatro", "logged Mar 2025 · 88 hrs", "9"),
+      ],
+      library: libTitles.map(([title, status, score, hours]) => ({
+        title, score, hours, dot: dotFor[status],
+      })),
+      rows: libTitles.slice(0, 9).map(([title, status, rating, hours]) => ({
+        title,
+        meta: status === "backlog" ? "added from search" : "Action RPG · PC",
+        status: status[0].toUpperCase() + status.slice(1),
+        statusBg: st[status][0],
+        statusFg: st[status][1],
+        rating: rating === "—" ? "—" : rating + "/10",
+        hours,
+        bar: Math.min(100, Math.round(parseFloat(hours) || 0)) + "%",
+        source: status === "backlog" ? "Manual" : "Steam",
+      })),
+      dist: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+        const h = [3, 3, 4, 6, 9, 14, 22, 46, 82, 100][n - 1];
+        return { n, h: h + "%", fill: n >= 9 ? "#c44900" : "rgba(196,73,0,.42)" };
+      }),
+      reviews: [
+        { user: "mira.plays", initials: "MP", rating: "9/10", meta: "58 hrs · completed", likes: 214,
+          avatarBg: "#432534",
+          text: "Put 58 hours in and never once opened a wiki. The map is the quest log, which either delights you or it doesn't. It delighted me." },
+        { user: "hexwarden", initials: "HW", rating: "7/10", meta: "31 hrs · dropped", likes: 96,
+          avatarBg: "#183a37",
+          text: "Brilliant for 25 hours, then the copy-pasted catacombs start showing. Dropped it in Altus and I'm at peace with that." },
+        { user: "june_bugs", initials: "JB", rating: "10/10", meta: "140 hrs · completed",
+          likes: 512, avatarBg: "#1e3f3b",
+          text: "Third playthrough. I have a spreadsheet. Please send help, but not until I finish this build." },
+      ],
+      streams: [
+        { title: "no-hit run, attempt 41", channel: "sableknight · 6.2k", viewers: "6.2k" },
+        { title: "first playthrough, blind", channel: "kavvie · 4.8k", viewers: "4.8k" },
+        { title: "randomizer co-op night", channel: "twobirds · 3.1k", viewers: "3.1k" },
+        { title: "lore stream, chill", channel: "oldmarika · 1.9k", viewers: "1.9k" },
+      ],
+      friends: [
+        { name: "mira.plays", initials: "MP", rating: "9", bg: "#432534" },
+        { name: "hexwarden", initials: "HW", rating: "7", bg: "#183a37" },
+        { name: "june_bugs", initials: "JB", rating: "10", bg: "#1e3f3b" },
+        { name: "tallgrass", initials: "TG", rating: "8", bg: "#2a2038" },
+      ],
+      similar: [
+        { title: "Sekiro", why: "same combat DNA" },
+        { title: "Dragon's Dogma 2", why: "open world, no handholding" },
+        { title: "Nioh 2", why: "liked by 71% of your follows" },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

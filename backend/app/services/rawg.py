@@ -49,16 +49,18 @@ def _parse_release_date(value: str | None) -> date | None:
 
 def _normalize(raw: dict) -> RawgGame:
     """Map a RAWG game object onto our normalized RawgGame schema."""
-    genres = [g["name"] for g in raw.get("genres", []) if g.get("name")]
+    # RAWG returns null (not just an absent key) for these on some games, so
+    # `.get(key, [])` isn't enough — coerce None to [] explicitly.
+    genres = [g["name"] for g in (raw.get("genres") or []) if g.get("name")]
     # RAWG mixes tag languages; keep English tags for clean recommender features.
     tags = [
         t["name"]
-        for t in raw.get("tags", [])
+        for t in (raw.get("tags") or [])
         if t.get("name") and t.get("language") == "eng"
     ]
     platforms = [
         p["platform"]["name"]
-        for p in raw.get("platforms", []) or []
+        for p in (raw.get("platforms") or [])
         if p.get("platform", {}).get("name")
     ]
     return RawgGame(
