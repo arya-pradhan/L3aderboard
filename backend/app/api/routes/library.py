@@ -10,7 +10,6 @@ from sqlmodel import select
 from app.core.deps import CurrentUser, SessionDep
 from app.models import Game, LibraryEntry, LibrarySource, LibraryStatus
 from app.schemas.game import (
-    GameRead,
     LibraryEntryCreate,
     LibraryEntryRead,
     LibraryEntryUpdate,
@@ -18,24 +17,11 @@ from app.schemas.game import (
 from app.schemas.steam import SteamImportSummary
 from app.services import rawg, steam_import
 from app.services.games import upsert_game_from_rawg
+from app.services.library_view import entries_to_reads, entry_to_read
 from app.services.rawg import RAWGError, RAWGNotConfigured, RAWGNotFound
 from app.services.steam import SteamError, SteamNotConfigured
 
 router = APIRouter(prefix="/library", tags=["library"])
-
-
-def _to_read(entry: LibraryEntry, game: Game) -> LibraryEntryRead:
-    return LibraryEntryRead(
-        id=entry.id,
-        status=entry.status,
-        rating=entry.rating,
-        review_text=entry.review_text,
-        hours_played=entry.hours_played,
-        source=entry.source,
-        created_at=entry.created_at,
-        updated_at=entry.updated_at,
-        game=GameRead.model_validate(game),
-    )
 
 
 async def _get_owned_entry(
@@ -62,13 +48,7 @@ async def list_my_library(
     stmt = stmt.order_by(LibraryEntry.updated_at.desc())
 
     entries = (await session.exec(stmt)).all()
-    if not entries:
-        return []
-
-    game_ids = {e.game_id for e in entries}
-    games = (await session.exec(select(Game).where(Game.id.in_(game_ids)))).all()
-    game_map = {g.id: g for g in games}
-    return [_to_read(e, game_map[e.game_id]) for e in entries]
+    return await entries_to_reads(session, entries)
 
 
 @router.post("", response_model=LibraryEntryRead, status_code=status.HTTP_201_CREATED)
@@ -123,7 +103,7 @@ async def add_to_library(
             detail="Game already in your library",
         )
     await session.refresh(entry)
-    return _to_read(entry, game)
+    return entry_to_read(entry, game)
 
 
 @router.post("/steam/import", response_model=SteamImportSummary)
@@ -166,7 +146,7 @@ async def update_entry(
     await session.refresh(entry)
 
     game = await session.get(Game, entry.game_id)
-    return _to_read(entry, game)
+    return entry_to_read(entry, game)
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
