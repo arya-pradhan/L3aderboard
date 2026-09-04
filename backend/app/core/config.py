@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -20,8 +20,15 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60 * 24
 
-    # CORS — accepts a comma-separated string or a list
-    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    # CORS — comma-separated origins, read from the CORS_ORIGINS env var.
+    # Kept as a plain str (not list[str]): pydantic-settings tries to
+    # JSON-decode env values for complex/list-typed fields before any
+    # validator runs, which blows up on a plain "http://a,http://b" string.
+    # A str field skips that decoding entirely; cors_origins below splits it.
+    cors_origins_raw: str = Field(
+        default="http://localhost:5173,http://127.0.0.1:5173",
+        alias="CORS_ORIGINS",
+    )
 
     # Where the frontend lives (Steam login redirects back here with a token).
     frontend_url: str = "http://localhost:5173"
@@ -31,12 +38,9 @@ class Settings(BaseSettings):
     steam_api_key: str | None = None
     openai_api_key: str | None = None
 
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def _split_origins(cls, v: object) -> object:
-        if isinstance(v, str):
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
+    @property
+    def cors_origins(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins_raw.split(",") if o.strip()]
 
     @property
     def async_database_url(self) -> str:
