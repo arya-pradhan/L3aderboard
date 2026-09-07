@@ -40,7 +40,13 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins_raw.split(",") if o.strip()]
+        # Trailing slashes are stripped: browsers send Origin as scheme://host,
+        # never with a path, so "https://x.app/" would silently never match.
+        return [
+            o.strip().rstrip("/")
+            for o in self.cors_origins_raw.split(",")
+            if o.strip().rstrip("/")
+        ]
 
     @property
     def async_database_url(self) -> str:

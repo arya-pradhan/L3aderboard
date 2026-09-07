@@ -51,6 +51,8 @@ export const api = {
 
   searchGames: (q, limit = 18) =>
     request(`/games/search?q=${encodeURIComponent(q)}&limit=${limit}`),
+  gameDetail: (rawgId) => request(`/games/${rawgId}`),
+  discoverHome: () => request("/discover/home"),
 
   myLibrary: (status) => request(`/library${qs(status)}`),
   addToLibrary: (d) => request("/library", { method: "POST", body: d }),

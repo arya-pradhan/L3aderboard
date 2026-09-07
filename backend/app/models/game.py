@@ -22,3 +22,4 @@ class Game(SQLModel, table=True):
 
     cover_url: str | None = Field(default=None, max_length=1000)
     release_date: date | None = Field(default=None)
+    description: str | None = Field(default=None)

@@ -21,3 +21,16 @@ def test_cors_origins_single_value_no_trailing_slash(monkeypatch):
     monkeypatch.setenv("CORS_ORIGINS", "https://l3aderboard.vercel.app")
     s = Settings()
     assert s.cors_origins == ["https://l3aderboard.vercel.app"]
+
+
+def test_cors_origins_strips_trailing_slash(monkeypatch):
+    # Browsers send Origin without a trailing slash; a pasted URL often has one.
+    monkeypatch.setenv("CORS_ORIGINS", "https://l3aderboard.vercel.app/")
+    s = Settings()
+    assert s.cors_origins == ["https://l3aderboard.vercel.app"]
+
+
+def test_cors_origins_mixed_slashes_and_spaces(monkeypatch):
+    monkeypatch.setenv("CORS_ORIGINS", "https://a.app/, https://b.app ,https://c.app/")
+    s = Settings()
+    assert s.cors_origins == ["https://a.app", "https://b.app", "https://c.app"]

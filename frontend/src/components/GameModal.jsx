@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api/client.js";
 import { STATUSES, statusLabel, gameMeta } from "../lib/util.js";
 import CoverArt from "./CoverArt.jsx";
+
+const RATINGS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 // Add a RAWG game to the library, or edit/remove an existing entry.
 export default function GameModal({ game, entry, onClose, onSaved, onDeleted }) {
@@ -9,11 +11,32 @@ export default function GameModal({ game, entry, onClose, onSaved, onDeleted }) 
   const g = editing ? entry.game : game;
 
   const [status, setStatus] = useState(entry?.status || "playing");
-  const [rating, setRating] = useState(entry?.rating ?? "");
+  const [rating, setRating] = useState(entry?.rating ?? null);
   const [review, setReview] = useState(entry?.review_text ?? "");
   const [hours, setHours] = useState(entry?.hours_played ?? 0);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+
+  // RAWG only returns descriptions from its detail endpoint, so a game coming
+  // from search/browse results needs one fetched on open.
+  const [description, setDescription] = useState(g.description || null);
+  const [descLoading, setDescLoading] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
+
+  useEffect(() => {
+    if (description || !g.rawg_id) return;
+    let alive = true;
+    setDescLoading(true);
+    api
+      .gameDetail(g.rawg_id)
+      .then((full) => alive && setDescription(full.description || null))
+      .catch(() => {})
+      .finally(() => alive && setDescLoading(false));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [g.rawg_id]);
 
   const save = async () => {
     setBusy(true);
@@ -21,7 +44,7 @@ export default function GameModal({ game, entry, onClose, onSaved, onDeleted }) 
     try {
       const payload = {
         status,
-        rating: rating === "" ? null : Number(rating),
+        rating: rating ?? null,
         review_text: review.trim() || null,
       };
       let result;
@@ -53,7 +76,7 @@ export default function GameModal({ game, entry, onClose, onSaved, onDeleted }) 
   return (
     <div className="modal-backdrop" onMouseDown={onClose}>
       <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="row" style={{ alignItems: "flex-start", gap: 14, marginBottom: 16 }}>
+        <div className="row" style={{ alignItems: "flex-start", gap: 14, marginBottom: 8 }}>
           <CoverArt game={g} style={{ width: 70, flex: "none" }} />
           <div style={{ minWidth: 0 }}>
             <h2>{g.title}</h2>
@@ -67,9 +90,32 @@ export default function GameModal({ game, entry, onClose, onSaved, onDeleted }) 
           </button>
         </div>
 
-        {err && <div className="banner error">{err}</div>}
+        {descLoading && !description && (
+          <p className="desc muted" style={{ fontStyle: "italic" }}>
+            Loading description…
+          </p>
+        )}
+        {description && (
+          <>
+            <p className={`desc ${descExpanded ? "" : "clamped"}`}>{description}</p>
+            {description.length > 260 && (
+              <button
+                className="desc-toggle"
+                onClick={() => setDescExpanded((v) => !v)}
+              >
+                {descExpanded ? "Show less" : "Show more"}
+              </button>
+            )}
+          </>
+        )}
 
-        <div className="field">
+        {err && (
+          <div className="banner error" style={{ marginTop: 14 }}>
+            {err}
+          </div>
+        )}
+
+        <div className="field" style={{ marginTop: 16 }}>
           <label>Status</label>
           <div className="pills">
             {STATUSES.map((s) => (
@@ -85,32 +131,41 @@ export default function GameModal({ game, entry, onClose, onSaved, onDeleted }) 
           </div>
         </div>
 
-        <div className="row" style={{ gap: 12, alignItems: "flex-end" }}>
-          <div className="field" style={{ flex: 1, marginBottom: 14 }}>
-            <label>Rating</label>
-            <select className="input" value={rating} onChange={(e) => setRating(e.target.value)}>
-              <option value="">Not rated</option>
-              {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map((n) => (
-                <option key={n} value={n}>
-                  {n} / 10
-                </option>
-              ))}
-            </select>
+        <div className="field">
+          <label>Rating {rating ? `— ${rating}/10` : ""}</label>
+          <div className="rating-grid">
+            {RATINGS.map((n) => (
+              <button
+                key={n}
+                type="button"
+                className={`rating-btn ${rating === n ? "active" : ""}`}
+                onClick={() => setRating(n)}
+              >
+                {n}
+              </button>
+            ))}
+            {rating != null && (
+              <button type="button" className="rating-clear" onClick={() => setRating(null)}>
+                Clear
+              </button>
+            )}
           </div>
-          {editing && (
-            <div className="field" style={{ flex: 1, marginBottom: 14 }}>
-              <label>Hours played</label>
-              <input
-                className="input"
-                type="number"
-                min="0"
-                step="0.1"
-                value={hours}
-                onChange={(e) => setHours(e.target.value)}
-              />
-            </div>
-          )}
         </div>
+
+        {editing && (
+          <div className="field">
+            <label>Hours played</label>
+            <input
+              className="input"
+              type="number"
+              min="0"
+              step="0.1"
+              value={hours}
+              onChange={(e) => setHours(e.target.value)}
+              style={{ maxWidth: 160 }}
+            />
+          </div>
+        )}
 
         <div className="field">
           <label>Review</label>
@@ -124,7 +179,12 @@ export default function GameModal({ game, entry, onClose, onSaved, onDeleted }) 
 
         <div className="row" style={{ marginTop: 8 }}>
           {editing && (
-            <button className="btn ghost" style={{ color: "var(--ink-50)" }} onClick={remove} disabled={busy}>
+            <button
+              className="btn ghost"
+              style={{ color: "var(--ink-50)" }}
+              onClick={remove}
+              disabled={busy}
+            >
               <i className="ph ph-trash" /> Remove
             </button>
           )}
