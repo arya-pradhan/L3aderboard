@@ -4,10 +4,16 @@ Isolated, framework-agnostic wrapper around the RAWG video-game database
 (https://rawg.io/apidocs). Returns normalized `RawgGame` objects so the rest of
 the app never deals with RAWG's raw JSON shape. Raises service-level exceptions
 that route handlers translate into HTTP responses.
+
+Discovery reads (`discover_games`, `list_genres`) are identical for every user
+and go through a small in-process TTL cache, since RAWG's free tier allows
+~20k requests/month and the home page would otherwise hit it on every load.
 """
 from __future__ import annotations
 
+import time
 from datetime import date, datetime
+from typing import Any
 
 import httpx
 
@@ -16,6 +22,7 @@ from app.schemas.game import RawgGame
 
 RAWG_BASE_URL = "https://api.rawg.io/api"
 _TIMEOUT = httpx.Timeout(10.0)
+CACHE_TTL_SECONDS = 30 * 60
 
 
 class RAWGError(RuntimeError):
@@ -47,6 +54,31 @@ def _parse_release_date(value: str | None) -> date | None:
         return None
 
 
+# --- tiny TTL cache ------------------------------------------------------
+
+_cache: dict[str, tuple[float, Any]] = {}
+
+
+def _cache_get(key: str) -> Any | None:
+    hit = _cache.get(key)
+    if hit is not None and hit[0] > time.monotonic():
+        return hit[1]
+    _cache.pop(key, None)
+    return None
+
+
+def _cache_set(key: str, value: Any) -> None:
+    _cache[key] = (time.monotonic() + CACHE_TTL_SECONDS, value)
+
+
+def clear_cache() -> None:
+    """Exposed for tests."""
+    _cache.clear()
+
+
+# --- normalization -------------------------------------------------------
+
+
 def _normalize(raw: dict) -> RawgGame:
     """Map a RAWG game object onto our normalized RawgGame schema."""
     # RAWG returns null (not just an absent key) for these on some games, so
@@ -71,25 +103,79 @@ def _normalize(raw: dict) -> RawgGame:
         platforms=platforms,
         cover_url=raw.get("background_image"),
         release_date=_parse_release_date(raw.get("released")),
+        # Only present on the detail endpoint, not in list/search results.
+        description=(raw.get("description_raw") or None),
     )
+
+
+# --- requests ------------------------------------------------------------
+
+
+async def _fetch_games(
+    params: dict[str, Any], *, cache_key: str | None = None
+) -> list[RawgGame]:
+    """GET /games with the given filters, normalized (optionally cached)."""
+    if cache_key:
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+    key = _require_key()
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.get(
+                f"{RAWG_BASE_URL}/games", params={"key": key, **params}
+            )
+            resp.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise RAWGError(f"RAWG request failed: {exc}") from exc
+
+    games = [_normalize(r) for r in resp.json().get("results", [])]
+    if cache_key:
+        _cache_set(cache_key, games)
+    return games
 
 
 async def search_games(query: str, *, limit: int = 10) -> list[RawgGame]:
     """Search RAWG by title, returning normalized results."""
+    return await _fetch_games({"search": query, "page_size": limit})
+
+
+async def discover_games(*, limit: int = 20, **filters: Any) -> list[RawgGame]:
+    """Browse RAWG by filter (ordering, dates, genres, ...). Cached."""
+    params = {k: v for k, v in filters.items() if v is not None}
+    params["page_size"] = limit
+    cache_key = "games:" + "&".join(f"{k}={params[k]}" for k in sorted(params))
+    return await _fetch_games(params, cache_key=cache_key)
+
+
+async def list_genres() -> list[dict[str, str]]:
+    """RAWG's genre list as [{slug, name}, ...]. Cached."""
+    cached = _cache_get("genres")
+    if cached is not None:
+        return cached
+
     key = _require_key()
-    params = {"key": key, "search": query, "page_size": limit}
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(f"{RAWG_BASE_URL}/games", params=params)
+            resp = await client.get(
+                f"{RAWG_BASE_URL}/genres", params={"key": key, "page_size": 40}
+            )
             resp.raise_for_status()
     except httpx.HTTPError as exc:
-        raise RAWGError(f"RAWG search failed: {exc}") from exc
-    results = resp.json().get("results", [])
-    return [_normalize(r) for r in results]
+        raise RAWGError(f"RAWG genres request failed: {exc}") from exc
+
+    genres = [
+        {"slug": g["slug"], "name": g["name"]}
+        for g in resp.json().get("results", [])
+        if g.get("slug") and g.get("name")
+    ]
+    _cache_set("genres", genres)
+    return genres
 
 
 async def get_game(rawg_id: int) -> RawgGame:
-    """Fetch a single game's full metadata by RAWG id."""
+    """Fetch a single game's full metadata (incl. description) by RAWG id."""
     key = _require_key()
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:

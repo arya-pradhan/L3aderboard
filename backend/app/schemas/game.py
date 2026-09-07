@@ -18,6 +18,9 @@ class RawgGame(BaseModel):
     platforms: list[str] = []
     cover_url: str | None = None
     release_date: date | None = None
+    # RAWG only returns this from its detail endpoint, so it's None for
+    # search/browse results.
+    description: str | None = None
 
 
 class GameRead(BaseModel):
@@ -31,8 +34,18 @@ class GameRead(BaseModel):
     platforms: list[str] = []
     cover_url: str | None = None
     release_date: date | None = None
+    description: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class DiscoveryRow(BaseModel):
+    """One horizontal row on the home page."""
+
+    key: str
+    title: str
+    subtitle: str | None = None
+    games: list[RawgGame] = []
 
 
 class LibraryEntryCreate(BaseModel):

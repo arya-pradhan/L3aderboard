@@ -54,13 +54,31 @@ GAMES = {
     3: RawgGame(rawg_id=3, title="Doom", genres=["Shooter", "Action"], tags=["Gore"]),
 }
 
+GENRES = [
+    {"slug": "indie", "name": "Indie"},
+    {"slug": "platformer", "name": "Platformer"},
+    {"slug": "shooter", "name": "Shooter"},
+]
+
 
 @pytest.fixture
 def mock_rawg(monkeypatch: pytest.MonkeyPatch):
+    """Mock the whole RAWG surface the recommender touches."""
+
     async def fake_get_game(rawg_id: int) -> RawgGame:
         return GAMES[rawg_id]
 
+    async def fake_list_genres() -> list[dict[str, str]]:
+        return GENRES
+
+    async def fake_discover(*, limit: int = 20, **filters) -> list[RawgGame]:
+        # The candidate pool RAWG would return for the user's top genres.
+        # Includes the already-owned game to prove it gets excluded.
+        return [GAMES[1], GAMES[2], GAMES[3]]
+
     monkeypatch.setattr(rawg, "get_game", fake_get_game)
+    monkeypatch.setattr(rawg, "list_genres", fake_list_genres)
+    monkeypatch.setattr(rawg, "discover_games", fake_discover)
 
 
 async def _auth(client: AsyncClient, username: str) -> dict[str, str]:
@@ -76,21 +94,30 @@ async def _auth(client: AsyncClient, username: str) -> dict[str, str]:
 
 async def test_recommendations_endpoint(client: AsyncClient, mock_rawg) -> None:
     arya = await _auth(client, "arya")
-    other = await _auth(client, "otherplayer")
 
-    # arya rates a platformer highly.
+    # arya rates a platformer highly — that alone should be enough now that
+    # candidates come from RAWG rather than the local catalog.
     await client.post(
         "/library", json={"rawg_id": 1, "status": "completed", "rating": 9}, headers=arya
     )
-    # someone else's catalog gives us candidates arya doesn't own.
-    await client.post("/library", json={"rawg_id": 2}, headers=other)  # Celeste (similar)
-    await client.post("/library", json={"rawg_id": 3}, headers=other)  # Doom (unrelated)
 
     recs = (await client.get("/recommendations", headers=arya)).json()
     titles = [g["title"] for g in recs]
     assert titles[:1] == ["Celeste"]  # similar game ranked first
     assert "Doom" not in titles  # nothing in common -> not recommended
-    assert "Hollow Knight" not in titles  # already owned
+    assert "Hollow Knight" not in titles  # already owned, excluded from pool
+
+
+async def test_recommendations_need_no_other_users(
+    client: AsyncClient, mock_rawg
+) -> None:
+    """The whole point of the RAWG-sourced pool: a solo user gets results."""
+    solo = await _auth(client, "solo")
+    await client.post(
+        "/library", json={"rawg_id": 1, "status": "completed", "rating": 8}, headers=solo
+    )
+    recs = (await client.get("/recommendations", headers=solo)).json()
+    assert len(recs) > 0
 
 
 async def test_recommendations_empty_for_new_user(client: AsyncClient) -> None:

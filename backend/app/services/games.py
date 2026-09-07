@@ -30,6 +30,7 @@ async def upsert_game_from_rawg(session: AsyncSession, data: RawgGame) -> Game:
             platforms=data.platforms,
             cover_url=data.cover_url,
             release_date=data.release_date,
+            description=data.description,
         )
         session.add(game)
         await session.flush()  # assign game.id without ending the transaction
@@ -42,6 +43,9 @@ async def upsert_game_from_rawg(session: AsyncSession, data: RawgGame) -> Game:
     game.platforms = data.platforms
     game.cover_url = data.cover_url
     game.release_date = data.release_date
+    # Browse/search results carry no description; don't wipe a stored one.
+    if data.description:
+        game.description = data.description
     session.add(game)
     await session.flush()
     return game
