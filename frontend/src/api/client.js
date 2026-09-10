@@ -24,7 +24,17 @@ async function request(path, { method = "GET", body, form, auth = true } = {}) {
   }
   if (auth && token) headers["Authorization"] = `Bearer ${token}`;
 
-  const res = await fetch(`${BASE}${path}`, { method, headers, body: payload });
+  let res;
+  try {
+    res = await fetch(`${BASE}${path}`, { method, headers, body: payload });
+  } catch {
+    // fetch() throws a bare "Failed to fetch" for three very different
+    // problems: the API isn't running, the URL is wrong, or CORS rejected us.
+    // Surface the URL we actually tried so it's diagnosable.
+    throw new Error(
+      `Can't reach the API at ${BASE} — is the backend running, and is this origin allowed by CORS?`
+    );
+  }
   if (res.status === 204) return null;
 
   const data = await res.json().catch(() => null);
