@@ -1,13 +1,15 @@
 """Authentication routes: register, login (JWT), and current-user lookup."""
-from __future__ import annotations
-
+# NOTE: no `from __future__ import annotations` here. slowapi wraps the
+# decorated endpoints, and FastAPI can't resolve *string* annotations through
+# the wrapper's globals — dependencies would silently become query params.
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import or_, select
 
 from app.core.deps import CurrentUser, SessionDep
+from app.core.ratelimit import LOGIN_LIMIT, REGISTER_LIMIT, limiter
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models import User
 from app.schemas.auth import RegisterRequest, Token, UserRead
@@ -16,7 +18,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-async def register(payload: RegisterRequest, session: SessionDep) -> User:
+@limiter.limit(REGISTER_LIMIT)
+async def register(
+    request: Request, payload: RegisterRequest, session: SessionDep
+) -> User:
     # Reject duplicate username or email up front for a clean error message.
     existing = await session.exec(
         select(User).where(
@@ -41,7 +46,9 @@ async def register(payload: RegisterRequest, session: SessionDep) -> User:
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit(LOGIN_LIMIT)
 async def login(
+    request: Request,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     session: SessionDep,
 ) -> Token:

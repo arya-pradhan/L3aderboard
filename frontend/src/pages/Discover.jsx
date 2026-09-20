@@ -80,9 +80,10 @@ export default function Discover() {
       <div className="game-cell" key={g.rawg_id}>
         <button
           onClick={() => !inLib && setModalGame(g)}
-          className="cover-btn"
+          className={`cover-btn ${inLib ? "static" : ""}`}
           style={{ cursor: inLib ? "default" : "pointer" }}
-          title={inLib ? "Already in your library" : "Add game"}
+          title={inLib ? `${g.title} — already in your library` : `Add ${g.title}`}
+          aria-label={inLib ? `${g.title}, already in your library` : `Add ${g.title}`}
         >
           <CoverArt game={g} />
         </button>
@@ -111,10 +112,11 @@ export default function Discover() {
           overflow: "hidden",
           padding: "40px 36px",
           marginBottom: 30,
-          background:
-            "radial-gradient(90% 120% at 85% 10%, rgba(196,73,0,.28), transparent 60%), linear-gradient(140deg,#183a37,#04151f 72%)",
+          background: "linear-gradient(115deg, #183a37 0%, #04151f 62%)",
         }}
       >
+        {/* the mockup's diagonal hatch — the brand's editorial texture */}
+        <div className="hero-hatch" aria-hidden="true" />
         <span className="kicker">Discover</span>
         <h1 style={{ margin: "12px 0 10px", font: "600 40px/1.05 var(--font)" }}>
           Find your next game.
@@ -190,9 +192,10 @@ export default function Discover() {
           )}
 
           {rowsLoading && rows.length === 0 && (
-            <div className="center">
-              <div className="spinner" />
-            </div>
+            <>
+              <GameRow title="Popular this year" loading />
+              <GameRow title="New & upcoming" loading />
+            </>
           )}
 
           {rows.map((row) => (

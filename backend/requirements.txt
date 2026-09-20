@@ -18,6 +18,9 @@ python-jose[cryptography]==3.3.0
 # --- HTTP client (RAWG / Steam) ---
 httpx==0.28.1
 
+# --- Rate limiting (public-deployment abuse protection) ---
+slowapi==0.1.9
+
 # --- Recommendations (content-based similarity) ---
 scikit-learn==1.6.1
 numpy==2.2.1

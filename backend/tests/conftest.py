@@ -17,7 +17,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 import app.models  # noqa: F401  (register tables on metadata)
 from app.core.db import get_session
+from app.core.ratelimit import limiter
 from app.main import app
+
+# The suite registers/logs in many users from a single client "IP", which would
+# trip the per-IP limits. Disable globally; test_ratelimit.py re-enables it.
+limiter.enabled = False
 
 
 @pytest_asyncio.fixture

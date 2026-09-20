@@ -16,7 +16,9 @@ export default function StatBand({ stats }) {
         </span>
         <span className="lbl">Hours played</span>
         <span className="sub">
-          {stats.total ? `${(stats.hours / stats.total).toFixed(1)} hrs avg per game` : "—"}
+          {stats.avgHours != null
+            ? `${stats.avgHours.toFixed(1)} hrs avg per game played`
+            : "no playtime logged yet"}
         </span>
       </div>
       <div className="stat">

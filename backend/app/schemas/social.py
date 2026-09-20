@@ -24,6 +24,15 @@ class UserProfile(BaseModel):
     is_self: bool
 
 
+class SuggestedUser(BaseModel):
+    """A user the caller might want to follow."""
+
+    id: int
+    username: str
+    games_count: int
+    followers_count: int
+
+
 class FeedActor(BaseModel):
     id: int
     username: str
