@@ -74,10 +74,15 @@ export function computeStats(entries) {
   };
 }
 
+// RAWG's resizer only serves these widths; any other value 307-redirects to
+// api.rawg.io, which isn't an image and breaks the <img>. Always snap to one.
+const RAWG_WIDTHS = [200, 420, 600, 640, 1280, 1920];
+
 /**
  * RAWG's `background_image` is a full-size (~1920px) landscape screenshot.
  * RAWG also serves resized variants; requesting one sized for the slot avoids
  * a heavy in-browser downscale (which reads as "soft") and loads far faster.
+ * `width` is snapped UP to the nearest size RAWG actually serves.
  * Non-RAWG or already-resized URLs pass through untouched.
  */
 export function coverSrc(url, width = 640) {
@@ -87,8 +92,9 @@ export function coverSrc(url, width = 640) {
   if (i === -1 || url.includes("/media/resize/") || url.includes("/media/crop/")) {
     return url;
   }
+  const snapped = RAWG_WIDTHS.find((w) => w >= width) ?? RAWG_WIDTHS[RAWG_WIDTHS.length - 1];
   const cut = i + marker.length;
-  return `${url.slice(0, cut)}resize/${width}/-/${url.slice(cut)}`;
+  return `${url.slice(0, cut)}resize/${snapped}/-/${url.slice(cut)}`;
 }
 
 // year · genre1 · genre2  — the small meta line under a game title
