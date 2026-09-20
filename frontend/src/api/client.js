@@ -76,6 +76,7 @@ export const api = {
   unfollow: (name) => request(`/users/${u(name)}/follow`, { method: "DELETE" }),
 
   feed: () => request("/feed"),
+  suggestedUsers: (limit = 6) => request(`/users/suggested?limit=${limit}`),
   recommendations: (limit = 12) => request(`/recommendations?limit=${limit}`),
 
   steamLoginUrl: () => `${BASE}/auth/steam/login`,

@@ -302,10 +302,12 @@ textarea.input {
   position: relative;
   aspect-ratio: 2 / 3;
   border-radius: var(--radius);
-  background: linear-gradient(160deg, #1b332f, #0b1c25);
-  box-shadow: inset 0 0 0 1px var(--line);
+  background: #0f2229;
+  /* crisp 1px ring so covers separate from the ink ground */
+  box-shadow: inset 0 0 0 1px rgba(239, 214, 172, 0.2);
   overflow: hidden;
   display: block;
+  transition: transform 180ms ease-out, box-shadow 180ms ease-out;
 }
 .cover img {
   position: absolute;
@@ -313,6 +315,19 @@ textarea.input {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
+}
+/* hover/focus lift — applied via the wrapping button so keyboard focus counts */
+.cover-btn:hover .cover,
+.cover-btn:focus-visible .cover {
+  transform: translateY(-4px);
+  box-shadow: inset 0 0 0 1px rgba(239, 214, 172, 0.3), 0 0 0 2px var(--accent),
+    0 12px 28px rgba(0, 0, 0, 0.45);
+}
+/* already-in-library cards aren't actionable: no lift */
+.cover-btn.static:hover .cover {
+  transform: none;
+  box-shadow: inset 0 0 0 1px rgba(239, 214, 172, 0.2);
 }
 .cover .cover-fallback {
   position: absolute;
@@ -322,24 +337,33 @@ textarea.input {
   font: 500 11px/1.25 var(--font);
   color: var(--ink-40);
 }
+/* rating badge — solid, opaque, readable over any art */
 .cover .cover-score {
   position: absolute;
   top: 8px;
   right: 8px;
-  padding: 3px 6px;
-  border-radius: 4px;
-  background: rgba(4, 21, 31, 0.85);
-  font: 600 10.5px/1.3 var(--font);
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 7px 4px 6px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff5e6;
+  font: 700 12px/1 var(--font);
+  letter-spacing: 0.01em;
+  box-shadow: 0 0 0 2px rgba(4, 21, 31, 0.9);
+}
+.cover .cover-score i {
+  font-size: 11px;
 }
 .cover .cover-dot {
   position: absolute;
-  top: 7px;
-  left: 7px;
-  width: 8px;
-  height: 8px;
+  top: 8px;
+  left: 8px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
-  box-shadow: 0 0 0 2px rgba(4, 21, 31, 0.7);
+  box-shadow: 0 0 0 2px rgba(4, 21, 31, 0.9);
 }
 
 /* reset for the cover-wrapping button — full-width block, no chrome */
@@ -353,6 +377,10 @@ textarea.input {
   font: inherit;
   color: inherit;
   text-align: left;
+  border-radius: var(--radius);
+}
+.cover-btn:focus-visible {
+  outline: none;
 }
 
 /* ── game grid ──────────────────────────────────────────────────── */
@@ -360,6 +388,9 @@ textarea.input {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 16px;
+}
+.game-grid > * {
+  min-width: 0; /* grid items also default to min-width:auto */
 }
 .game-cell .title {
   display: block;
@@ -421,26 +452,38 @@ textarea.input {
   flex-wrap: wrap;
   gap: 6px;
 }
+/* Neutral chip at rest; only the selected one takes the accent. */
 .pill {
-  padding: 6px 13px;
-  border-radius: 20px;
-  background: rgba(196, 73, 0, 0.12);
-  box-shadow: inset 0 0 0 1px rgba(196, 73, 0, 0.32);
-  color: var(--wheat);
-  font: 600 12.5px/1 var(--font);
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 214, 172, 0.16);
+  background: rgba(239, 214, 172, 0.07);
+  color: rgba(239, 214, 172, 0.85);
+  font: 500 12.5px/1 var(--font);
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background 0.12s, box-shadow 0.12s, color 0.12s;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease,
+    box-shadow 150ms ease;
 }
 .pill:hover {
-  background: rgba(196, 73, 0, 0.22);
-  box-shadow: inset 0 0 0 1px rgba(196, 73, 0, 0.5);
+  background: rgba(239, 214, 172, 0.11);
+  border-color: rgba(239, 214, 172, 0.32);
+  color: var(--wheat);
 }
-/* Active must stay clearly stronger than the (now brighter) base state. */
+.pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 73, 0, 0.45);
+}
 .pill.active {
-  background: rgba(196, 73, 0, 0.42);
-  box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 1px rgba(196, 73, 0, 0.35);
-  color: #fff2df;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff5e6;
+  font-weight: 600;
+  box-shadow: 0 0 0 3px rgba(196, 73, 0, 0.22);
+}
+.pill.active:hover {
+  background: var(--burnt-orange-hover);
+  border-color: var(--burnt-orange-hover);
 }
 
 /* ── stat band ──────────────────────────────────────────────────── */
@@ -634,6 +677,56 @@ textarea.input {
   object-fit: cover;
 }
 
+/* ── feed layout + people panel ─────────────────────────────────── */
+.feed-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 34px;
+  align-items: start;
+}
+.people-panel {
+  position: sticky;
+  top: calc(var(--nav-h) + 20px);
+}
+.people-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.person-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px;
+  border-radius: var(--radius);
+  transition: background 150ms ease;
+}
+.person-row:hover {
+  background: rgba(239, 214, 172, 0.05);
+}
+.person-name {
+  display: block;
+  font: 600 13px/1.2 var(--font);
+  color: var(--wheat);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.person-name:hover {
+  color: var(--accent);
+}
+@media (max-width: 860px) {
+  .feed-layout {
+    grid-template-columns: 1fr;
+  }
+  .people-panel {
+    position: static;
+  }
+}
+
 /* ── horizontal game rows (carousels) ───────────────────────────── */
 .game-row {
   position: relative;
@@ -644,14 +737,52 @@ textarea.input {
   gap: 14px;
   overflow-x: auto;
   scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
   scrollbar-width: none;
-  padding-bottom: 4px;
+  /* room for the hover lift + ring so they aren't clipped by overflow */
+  padding: 8px 6px 10px;
+  margin: -8px -6px -10px;
+  /* snap targets must account for that padding, or the browser scrolls 6px on
+     mount to align the first cell — which then hides its edge under the fade */
+  scroll-padding-inline: 6px;
+}
+/* Netflix-style edge dissolve — but only on an edge that has content beyond
+   it, otherwise the first/last card is clipped at rest. GameRow toggles
+   .fade-l / .fade-r from its scroll position. */
+.row-track.fade-r {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+.row-track.fade-l {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 36px);
+  mask-image: linear-gradient(to right, transparent, #000 36px);
+}
+.row-track.fade-l.fade-r {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 36px,
+    #000 calc(100% - 36px),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 36px,
+    #000 calc(100% - 36px),
+    transparent
+  );
 }
 .row-track::-webkit-scrollbar {
   display: none;
 }
+/* Fixed width + min-width:0 — flex items default to min-width:auto, which lets
+   a long nowrap title stretch its cell (and therefore its 2:3 cover). */
 .row-track > * {
   flex: 0 0 158px;
+  width: 158px;
+  min-width: 0;
+  scroll-snap-align: start;
 }
 .row-arrow {
   position: absolute;
@@ -660,30 +791,69 @@ textarea.input {
   z-index: 3;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  border: 1px solid var(--line-strong);
-  background: rgba(4, 21, 31, 0.92);
+  border: 1px solid rgba(239, 214, 172, 0.22);
+  background: rgba(4, 21, 31, 0.94);
   color: var(--wheat);
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.15s, background 0.15s;
+  transition: opacity 150ms ease, background 150ms ease, transform 150ms ease;
 }
-.game-row:hover .row-arrow {
+/* reveal on pointer hover AND when anything inside has keyboard focus */
+.game-row:hover .row-arrow,
+.game-row:focus-within .row-arrow {
   opacity: 1;
 }
 .row-arrow:hover {
-  background: rgba(196, 73, 0, 0.35);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff5e6;
+}
+.row-arrow:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 73, 0, 0.45);
+  opacity: 1;
 }
 .row-arrow.left {
-  left: -12px;
+  left: -14px;
 }
 .row-arrow.right {
-  right: -12px;
+  right: -14px;
 }
 .row-arrow[disabled] {
   display: none;
+}
+
+/* skeleton cards while a row loads (skeletons over spinners for content) */
+.skeleton-cell .sk-cover {
+  aspect-ratio: 2 / 3;
+  border-radius: var(--radius);
+  background: rgba(239, 214, 172, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(239, 214, 172, 0.08);
+}
+.skeleton-cell .sk-line {
+  height: 10px;
+  margin-top: 9px;
+  border-radius: 4px;
+  background: rgba(239, 214, 172, 0.08);
+}
+.skeleton-cell .sk-line.short {
+  width: 60%;
+  margin-top: 6px;
+}
+.skeleton-cell > * {
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
 }
 
 /* ── rating picker (1–10) ───────────────────────────────────────── */
@@ -695,36 +865,74 @@ textarea.input {
 .rating-btn {
   width: 34px;
   height: 32px;
-  border-radius: 7px;
-  background: rgba(196, 73, 0, 0.1);
-  box-shadow: inset 0 0 0 1px rgba(196, 73, 0, 0.28);
-  color: var(--wheat);
+  border-radius: 8px;
+  border: 1px solid rgba(239, 214, 172, 0.16);
+  background: rgba(239, 214, 172, 0.07);
+  color: rgba(239, 214, 172, 0.85);
   font: 600 12.5px/1 var(--font);
   cursor: pointer;
-  border: 0;
-  transition: background 0.12s, box-shadow 0.12s;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease,
+    box-shadow 150ms ease;
 }
 .rating-btn:hover {
-  background: rgba(196, 73, 0, 0.24);
+  background: rgba(239, 214, 172, 0.11);
+  border-color: rgba(239, 214, 172, 0.32);
+  color: var(--wheat);
+}
+.rating-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(196, 73, 0, 0.45);
 }
 .rating-btn.active {
-  background: rgba(196, 73, 0, 0.55);
-  box-shadow: inset 0 0 0 1px var(--accent);
-  color: #fff2df;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff5e6;
+  box-shadow: 0 0 0 3px rgba(196, 73, 0, 0.22);
 }
 .rating-clear {
   height: 32px;
   padding: 0 12px;
-  border-radius: 7px;
-  border: 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
   background: transparent;
-  box-shadow: inset 0 0 0 1px var(--line-strong);
   color: var(--ink-60);
   font: 500 12px/1 var(--font);
   cursor: pointer;
+  transition: color 150ms ease;
 }
 .rating-clear:hover {
   color: var(--wheat);
+}
+
+/* ── hero hatch texture (from the mockup) ───────────────────────── */
+.hero-hatch {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 55%;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(239, 214, 172, 0.05) 0 2px,
+    transparent 2px 9px
+  );
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 45%);
+  mask-image: linear-gradient(to right, transparent, #000 45%);
+}
+
+/* ── motion preferences ─────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  .cover-btn:hover .cover,
+  .cover-btn:focus-visible .cover {
+    transform: none;
+  }
 }
 
 /* ── game description ───────────────────────────────────────────── */

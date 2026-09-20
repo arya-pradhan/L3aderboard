@@ -20,7 +20,10 @@ class Token(BaseModel):
 class UserRead(BaseModel):
     id: int
     username: str
-    email: EmailStr | None = None
+    # Plain str on output: the value is already stored, and re-validating it
+    # here would turn any stored email the validator dislikes into a 500 on
+    # /auth/me. Input is still strictly validated via RegisterRequest.
+    email: str | None = None
     steam_id: str | None = None
     created_at: datetime
 

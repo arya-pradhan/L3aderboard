@@ -11,9 +11,10 @@ export default function LibraryGrid({ entries, editable, onEdit }) {
         <div className="game-cell" key={e.id}>
           <button
             onClick={() => editable && onEdit(e)}
-            className="cover-btn"
+            className={`cover-btn ${editable ? "" : "static"}`}
             style={{ cursor: editable ? "pointer" : "default" }}
-            title={editable ? "Edit entry" : e.game.title}
+            title={editable ? `Edit ${e.game.title}` : e.game.title}
+            aria-label={editable ? `Edit ${e.game.title}` : e.game.title}
           >
             <CoverArt game={e.game} status={e.status} score={e.rating ?? undefined} />
           </button>

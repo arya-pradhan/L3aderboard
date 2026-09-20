@@ -8,7 +8,7 @@ from sqlmodel import select
 from app.core.deps import CurrentUser, SessionDep
 from app.models import Follow, LibraryEntry, LibraryStatus, User
 from app.schemas.game import LibraryEntryRead
-from app.schemas.social import UserProfile
+from app.schemas.social import SuggestedUser, UserProfile
 from app.services.library_view import entries_to_reads
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -30,6 +30,47 @@ async def _count(session: SessionDep, model, *conditions) -> int:
     for cond in conditions:
         stmt = stmt.where(cond)
     return (await session.exec(stmt)).one()
+
+
+# NOTE: declared before "/{username}" — otherwise the literal path segment
+# "suggested" is captured as a username and 404s.
+@router.get("/suggested", response_model=list[SuggestedUser])
+async def suggested_users(
+    current_user: CurrentUser,
+    session: SessionDep,
+    limit: int = Query(default=6, ge=1, le=20),
+) -> list[SuggestedUser]:
+    """People to follow: users the caller doesn't follow yet, biggest library first."""
+    following = (
+        await session.exec(
+            select(Follow.followed_id).where(Follow.follower_id == current_user.id)
+        )
+    ).all()
+    excluded = set(following) | {current_user.id}
+
+    games_count = func.count(LibraryEntry.id).label("games_count")
+    stmt = (
+        select(User, games_count)
+        .outerjoin(LibraryEntry, LibraryEntry.user_id == User.id)
+        .where(User.id.notin_(excluded))
+        .group_by(User.id)
+        .order_by(games_count.desc(), User.created_at.asc())
+        .limit(limit)
+    )
+    rows = (await session.exec(stmt)).all()
+
+    result = []
+    for user, count in rows:
+        followers = await _count(session, Follow, Follow.followed_id == user.id)
+        result.append(
+            SuggestedUser(
+                id=user.id,
+                username=user.username,
+                games_count=count,
+                followers_count=followers,
+            )
+        )
+    return result
 
 
 @router.get("/{username}", response_model=UserProfile)
