@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query, Request
 
 from app.core.deps import CurrentUser
 from app.core.ratelimit import DETAIL_LIMIT, SEARCH_LIMIT, limiter, user_or_ip
-from app.schemas.game import RawgGame
+from app.schemas.game import GameDetail, RawgGame
 from app.services import rawg
 
 router = APIRouter(prefix="/games", tags=["games"])
@@ -22,14 +22,13 @@ async def search_games(
     return await rawg.search_games(q, limit=limit)
 
 
-@router.get("/{rawg_id}", response_model=RawgGame)
+@router.get("/{rawg_id}", response_model=GameDetail)
 @limiter.limit(DETAIL_LIMIT, key_func=user_or_ip)
 async def get_game(
     request: Request, rawg_id: int, current_user: CurrentUser
-) -> RawgGame:
-    """Full metadata for one RAWG game, including its description.
+) -> GameDetail:
+    """Everything the game popup shows: description, screenshots, RAWG ratings.
 
-    Search results omit the description, so the add-to-library modal fetches
-    this for a game that isn't in the user's library yet.
+    Search/browse results omit these, so the popup fetches them on open.
     """
-    return await rawg.get_game(rawg_id)
+    return await rawg.get_game_detail(rawg_id)

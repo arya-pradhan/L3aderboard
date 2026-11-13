@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../api/client.js";
-import CoverArt from "../components/CoverArt.jsx";
+import GameCase from "../components/GameCase.jsx";
 import GameModal from "../components/GameModal.jsx";
 import GameRow from "../components/GameRow.jsx";
-import { gameMeta } from "../lib/util.js";
 
 const SUGGESTIONS = ["Hollow Knight", "Elden Ring", "Balatro", "Outer Wilds", "Celeste"];
 
@@ -15,7 +14,8 @@ export default function Discover() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [libraryIds, setLibraryIds] = useState(new Set());
+  // rawg_id -> library entry, so owned games open in edit mode.
+  const [library, setLibrary] = useState(new Map());
   const [recs, setRecs] = useState([]);
   const [rows, setRows] = useState([]);
   const [rowsLoading, setRowsLoading] = useState(true);
@@ -25,10 +25,10 @@ export default function Discover() {
   useEffect(() => {
     api
       .myLibrary()
-      .then((r) => setLibraryIds(new Set(r.map((x) => x.game.rawg_id).filter(Boolean))))
+      .then((r) => setLibrary(new Map(r.filter((x) => x.game.rawg_id).map((x) => [x.game.rawg_id, x]))))
       .catch(() => {});
     api
-      .recommendations()
+      .recommendations(24)
       .then(setRecs)
       .catch(() => {});
     api
@@ -63,43 +63,24 @@ export default function Discover() {
     setParams(term.trim() ? { q: term.trim() } : {});
   };
 
-  const onAdded = (entry) => {
-    setLibraryIds((prev) => new Set(prev).add(entry.game.rawg_id));
+  const onSaved = (entry) => {
+    setLibrary((prev) => new Map(prev).set(entry.game.rawg_id, entry));
     setRecs((prev) => prev.filter((g) => g.rawg_id !== entry.game.rawg_id));
     setModalGame(null);
     // Adding (especially with a rating) changes the taste profile, so refresh.
     api
-      .recommendations()
+      .recommendations(24)
       .then(setRecs)
       .catch(() => {});
   };
 
-  const renderCard = (g) => {
-    const inLib = libraryIds.has(g.rawg_id);
-    return (
-      <div className="game-cell" key={g.rawg_id}>
-        <button
-          onClick={() => !inLib && setModalGame(g)}
-          className={`cover-btn ${inLib ? "static" : ""}`}
-          style={{ cursor: inLib ? "default" : "pointer" }}
-          title={inLib ? `${g.title} — already in your library` : `Add ${g.title}`}
-          aria-label={inLib ? `${g.title}, already in your library` : `Add ${g.title}`}
-        >
-          <CoverArt game={g} />
-        </button>
-        <span className="title">{g.title}</span>
-        <span className="meta">{gameMeta(g)}</span>
-        {inLib ? (
-          <span className="chip-accent" style={{ marginTop: 6, display: "inline-flex" }}>
-            In library
-          </span>
-        ) : (
-          <button className="btn sm" style={{ marginTop: 8 }} onClick={() => setModalGame(g)}>
-            <i className="ph ph-plus" /> Add
-          </button>
-        )}
-      </div>
-    );
+  const onDeleted = () => {
+    setLibrary((prev) => {
+      const next = new Map(prev);
+      next.delete(modalGame.rawg_id);
+      return next;
+    });
+    setModalGame(null);
   };
 
   return (
@@ -117,8 +98,7 @@ export default function Discover() {
       >
         {/* the mockup's diagonal hatch — the brand's editorial texture */}
         <div className="hero-hatch" aria-hidden="true" />
-        <span className="kicker">Discover</span>
-        <h1 style={{ margin: "12px 0 10px", font: "600 40px/1.05 var(--font)" }}>
+        <h1 style={{ margin: "0 0 12px", font: "800 clamp(44px, 9vw, 64px)/0.9 var(--display)" }}>
           Find your next game.
         </h1>
         <p className="muted" style={{ maxWidth: 460, margin: 0, fontSize: 14, lineHeight: 1.6 }}>
@@ -126,7 +106,7 @@ export default function Discover() {
           you play, rate and abandon.
         </p>
         <form onSubmit={submit} style={{ display: "flex", gap: 10, marginTop: 22, maxWidth: 520 }}>
-          <div className="nav-search" style={{ flex: 1, height: 42, width: "auto" }}>
+          <div className="nav-search" style={{ flex: 1, height: 44, width: "auto" }}>
             <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: "var(--ink-50)" }} />
             <input
               value={term}
@@ -135,7 +115,7 @@ export default function Discover() {
               autoFocus
             />
           </div>
-          <button className="btn primary" style={{ height: 42 }}>
+          <button className="btn primary" style={{ height: 44 }}>
             Search
           </button>
         </form>
@@ -145,7 +125,7 @@ export default function Discover() {
               Try:
             </span>
             {SUGGESTIONS.map((s) => (
-              <button key={s} className="pill" onClick={() => setParams({ q: s })}>
+              <button key={s} className="pill plain" onClick={() => setParams({ q: s })}>
                 {s}
               </button>
             ))}
@@ -170,7 +150,11 @@ export default function Discover() {
             <h3>Results</h3>
             <span className="sub">{results.length} games</span>
           </div>
-          <div className="game-grid">{results.map(renderCard)}</div>
+          <div className="game-grid" role="list">
+            {results.map((g) => (
+              <GameCase key={g.rawg_id} game={g} inLibrary={library.has(g.rawg_id)} onPick={setModalGame} />
+            ))}
+          </div>
         </>
       )}
 
@@ -182,7 +166,7 @@ export default function Discover() {
               title="For you"
               subtitle="based on games you've rated highly"
               games={recs}
-              libraryIds={libraryIds}
+              libraryIds={library}
               onPick={setModalGame}
             />
           ) : (
@@ -204,7 +188,7 @@ export default function Discover() {
               title={row.title}
               subtitle={row.subtitle}
               games={row.games}
-              libraryIds={libraryIds}
+              libraryIds={library}
               onPick={setModalGame}
             />
           ))}
@@ -212,7 +196,13 @@ export default function Discover() {
       )}
 
       {modalGame && (
-        <GameModal game={modalGame} onClose={() => setModalGame(null)} onSaved={onAdded} />
+        <GameModal
+          game={modalGame}
+          entry={library.get(modalGame.rawg_id)}
+          onClose={() => setModalGame(null)}
+          onSaved={onSaved}
+          onDeleted={onDeleted}
+        />
       )}
     </div>
   );

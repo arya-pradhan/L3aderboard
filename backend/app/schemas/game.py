@@ -23,6 +23,24 @@ class RawgGame(BaseModel):
     description: str | None = None
 
 
+class RatingShare(BaseModel):
+    """One slice of RAWG's community rating breakdown (exceptional, meh, ...)."""
+
+    title: str
+    percent: float
+
+
+class GameDetail(RawgGame):
+    """Everything the game popup shows: metadata plus RAWG media and ratings."""
+
+    screenshots: list[str] = []
+    rating: float | None = None  # RAWG community average, 0-5
+    ratings_count: int = 0
+    ratings: list[RatingShare] = []
+    metacritic: int | None = None
+    playtime: int | None = None  # RAWG's average hours played
+
+
 class GameRead(RawgGame):
     """A game as stored in our database (title-only Steam games have no rawg_id)."""
 

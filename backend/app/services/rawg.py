@@ -11,6 +11,7 @@ and go through a small in-process TTL cache, since RAWG's free tier allows
 """
 from __future__ import annotations
 
+import asyncio
 import time
 from datetime import date, datetime
 from typing import Any
@@ -18,7 +19,7 @@ from typing import Any
 import httpx
 
 from app.core.config import settings
-from app.schemas.game import RawgGame
+from app.schemas.game import GameDetail, RatingShare, RawgGame
 
 RAWG_BASE_URL = "https://api.rawg.io/api"
 _TIMEOUT = httpx.Timeout(10.0)
@@ -169,3 +170,38 @@ async def genre_slugs(names: list[str]) -> list[str]:
 async def get_game(rawg_id: int) -> RawgGame:
     """Fetch a single game's full metadata (incl. description) by RAWG id."""
     return _normalize(await _get(f"/games/{rawg_id}"))
+
+
+def _normalize_detail(raw: dict, shots: dict | None) -> GameDetail:
+    """Detail payload + screenshots response -> GameDetail."""
+    return GameDetail(
+        **_normalize(raw).model_dump(),
+        screenshots=[s["image"] for s in (shots or {}).get("results", []) if s.get("image")],
+        rating=raw.get("rating") or None,  # RAWG uses 0 for "no ratings yet"
+        ratings_count=raw.get("ratings_count") or 0,
+        ratings=[
+            RatingShare(title=r["title"], percent=r["percent"])
+            for r in (raw.get("ratings") or [])
+            if r.get("title") and r.get("percent") is not None
+        ],
+        metacritic=raw.get("metacritic"),
+        playtime=raw.get("playtime") or None,
+    )
+
+
+async def get_game_detail(rawg_id: int) -> GameDetail:
+    """Game metadata plus screenshots and community ratings. Cached."""
+    key = f"detail:{rawg_id}"
+    if (cached := _cache_get(key)) is not None:
+        return cached
+    raw, shots = await asyncio.gather(
+        _get(f"/games/{rawg_id}"),
+        _get(f"/games/{rawg_id}/screenshots", {"page_size": 12}),
+        return_exceptions=True,
+    )
+    if isinstance(raw, BaseException):
+        raise raw
+    # Screenshots are a nice-to-have: a failure there still shows the game.
+    detail = _normalize_detail(raw, None if isinstance(shots, BaseException) else shots)
+    _cache_set(key, detail)
+    return detail

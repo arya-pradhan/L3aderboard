@@ -22,7 +22,7 @@ router = APIRouter(prefix="/discover", tags=["discover"])
 # Used when the user's library is too thin to infer taste.
 DEFAULT_GENRE_SLUGS = ["indie", "action"]
 GENRE_ROWS = 2
-ROW_SIZE = 20
+ROW_SIZE = 40  # RAWG's max page size
 
 
 async def _user_top_genre_slugs(
