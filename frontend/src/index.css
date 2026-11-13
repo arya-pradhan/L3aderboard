@@ -990,3 +990,30 @@ textarea.input {
     gap: 14px;
   }
 }
+
+/* ── assistant chat ─────────────────────────────────────────────── */
+.chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 360px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 13px;
+  border-radius: var(--radius);
+  font: 400 14px/1.5 var(--font);
+  white-space: pre-wrap;
+}
+.chat-msg.user {
+  align-self: flex-end;
+  background: rgba(196, 73, 0, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(196, 73, 0, 0.35);
+}
+.chat-msg.assistant {
+  align-self: flex-start;
+  background: rgba(24, 58, 55, 0.5);
+  box-shadow: inset 0 0 0 1px var(--line);
+}

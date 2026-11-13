@@ -33,3 +33,4 @@ Thumbs.db
 
 # Local env overrides (Vite convention)
 .env*.local
+.neon

@@ -6,6 +6,7 @@ import SteamCallback from "./pages/SteamCallback.jsx";
 import Discover from "./pages/Discover.jsx";
 import Profile from "./pages/Profile.jsx";
 import Feed from "./pages/Feed.jsx";
+import Chat from "./pages/Chat.jsx";
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/library" element={<Profile />} />
         <Route path="/u/:username" element={<Profile />} />
         <Route path="/feed" element={<Feed />} />
+        <Route path="/chat" element={<Chat />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

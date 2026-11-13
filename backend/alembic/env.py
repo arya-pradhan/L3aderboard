@@ -16,7 +16,10 @@ from app.core.config import settings
 import app.models  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.async_database_url)
+# Direct (unpooled) URL; `%` escaped for configparser interpolation.
+config.set_main_option(
+    "sqlalchemy.url", settings.migration_database_url.replace("%", "%%")
+)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

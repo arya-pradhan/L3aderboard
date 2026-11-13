@@ -78,6 +78,7 @@ export const api = {
   feed: () => request("/feed"),
   suggestedUsers: (limit = 6) => request(`/users/suggested?limit=${limit}`),
   recommendations: (limit = 12) => request(`/recommendations?limit=${limit}`),
+  chat: (messages) => request("/chat", { method: "POST", body: { messages } }),
 
   steamLoginUrl: () => `${BASE}/auth/steam/login`,
 };
