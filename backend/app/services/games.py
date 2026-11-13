@@ -18,36 +18,15 @@ async def upsert_game_from_rawg(session: AsyncSession, data: RawgGame) -> Game:
     If the game exists, refresh its metadata (RAWG data can change over time).
     The caller is responsible for committing the transaction.
     """
-    result = await session.exec(select(Game).where(Game.rawg_id == data.rawg_id))
-    game = result.first()
-
-    if game is None:
-        game = Game(
-            rawg_id=data.rawg_id,
-            title=data.title,
-            genres=data.genres,
-            tags=data.tags,
-            platforms=data.platforms,
-            cover_url=data.cover_url,
-            release_date=data.release_date,
-            description=data.description,
-        )
-        session.add(game)
-        await session.flush()  # assign game.id without ending the transaction
-        return game
-
-    # Refresh metadata on an existing row.
-    game.title = data.title
-    game.genres = data.genres
-    game.tags = data.tags
-    game.platforms = data.platforms
-    game.cover_url = data.cover_url
-    game.release_date = data.release_date
+    game = (
+        await session.exec(select(Game).where(Game.rawg_id == data.rawg_id))
+    ).first() or Game(rawg_id=data.rawg_id, title=data.title)
     # Browse/search results carry no description; don't wipe a stored one.
-    if data.description:
-        game.description = data.description
+    for field, value in data.model_dump().items():
+        if field != "description" or value:
+            setattr(game, field, value)
     session.add(game)
-    await session.flush()
+    await session.flush()  # assign game.id without ending the transaction
     return game
 
 

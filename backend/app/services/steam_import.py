@@ -15,13 +15,9 @@ from app.services import rawg, steam
 from app.services.games import get_or_create_game_by_title, upsert_game_from_rawg
 
 
-async def import_library(
-    session: AsyncSession, user: User, *, limit: int | None = None
-) -> SteamImportSummary:
+async def import_library(session: AsyncSession, user: User) -> SteamImportSummary:
     """Import (or refresh) the user's Steam-owned games. Requires user.steam_id."""
     owned = await steam.get_owned_games(user.steam_id)
-    if limit is not None:
-        owned = owned[:limit]
 
     created = updated = matched = unmatched = 0
 

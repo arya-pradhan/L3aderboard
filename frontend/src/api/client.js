@@ -53,7 +53,6 @@ const qs = (status) => (status ? `?status=${encodeURIComponent(status)}` : "");
 const u = (name) => encodeURIComponent(name);
 
 export const api = {
-  base: BASE,
   register: (d) => request("/auth/register", { method: "POST", body: d, auth: false }),
   login: (username, password) =>
     request("/auth/login", { method: "POST", form: { username, password }, auth: false }),

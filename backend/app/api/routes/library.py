@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import select
 
 from app.core.deps import CurrentUser, SessionDep
 from app.models import Game, LibraryEntry, LibrarySource, LibraryStatus
@@ -17,9 +16,7 @@ from app.schemas.game import (
 from app.schemas.steam import SteamImportSummary
 from app.services import rawg, steam_import
 from app.services.games import upsert_game_from_rawg
-from app.services.library_view import entries_to_reads, entry_to_read
-from app.services.rawg import RAWGError, RAWGNotConfigured, RAWGNotFound
-from app.services.steam import SteamError, SteamNotConfigured
+from app.services.library_view import entry_to_read, user_library
 
 router = APIRouter(prefix="/library", tags=["library"])
 
@@ -42,13 +39,7 @@ async def list_my_library(
     session: SessionDep,
     status_filter: LibraryStatus | None = Query(default=None, alias="status"),
 ) -> list[LibraryEntryRead]:
-    stmt = select(LibraryEntry).where(LibraryEntry.user_id == current_user.id)
-    if status_filter is not None:
-        stmt = stmt.where(LibraryEntry.status == status_filter)
-    stmt = stmt.order_by(LibraryEntry.updated_at.desc())
-
-    entries = (await session.exec(stmt)).all()
-    return await entries_to_reads(session, entries)
+    return await user_library(session, current_user.id, status_filter)
 
 
 @router.post("", response_model=LibraryEntryRead, status_code=status.HTTP_201_CREATED)
@@ -58,31 +49,7 @@ async def add_to_library(
     session: SessionDep,
 ) -> LibraryEntryRead:
     # Fetch authoritative metadata from RAWG (client only sends the rawg_id).
-    try:
-        rawg_game = await rawg.get_game(payload.rawg_id)
-    except RAWGNotConfigured as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
-        )
-    except RAWGNotFound as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
-    except RAWGError as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc))
-
-    game = await upsert_game_from_rawg(session, rawg_game)
-
-    # Reject if this game is already in the user's library.
-    existing = await session.exec(
-        select(LibraryEntry).where(
-            LibraryEntry.user_id == current_user.id,
-            LibraryEntry.game_id == game.id,
-        )
-    )
-    if existing.first() is not None:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Game already in your library",
-        )
+    game = await upsert_game_from_rawg(session, await rawg.get_game(payload.rawg_id))
 
     entry = LibraryEntry(
         user_id=current_user.id,
@@ -96,7 +63,7 @@ async def add_to_library(
     session.add(entry)
     try:
         await session.commit()
-    except IntegrityError:
+    except IntegrityError:  # uq_library_user_game: already in the library
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -116,14 +83,7 @@ async def import_from_steam(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="No Steam account linked. Sign in with Steam first.",
         )
-    try:
-        return await steam_import.import_library(session, current_user)
-    except SteamNotConfigured as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
-        )
-    except SteamError as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc))
+    return await steam_import.import_library(session, current_user)
 
 
 @router.patch("/{entry_id}", response_model=LibraryEntryRead)
