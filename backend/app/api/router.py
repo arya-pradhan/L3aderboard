@@ -3,6 +3,7 @@ from fastapi import APIRouter
 
 from app.api.routes import (
     auth,
+    chat,
     discover,
     feed,
     games,
@@ -21,3 +22,4 @@ api_router.include_router(users.router)
 api_router.include_router(feed.router)
 api_router.include_router(discover.router)
 api_router.include_router(recommendations.router)
+api_router.include_router(chat.router)

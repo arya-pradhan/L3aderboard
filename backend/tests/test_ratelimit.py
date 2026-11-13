@@ -80,7 +80,7 @@ async def test_search_is_throttled_per_user(
 
 
 def test_client_ip_prefers_forwarded_header() -> None:
-    """Behind Railway's proxy, X-Forwarded-For carries the real client."""
+    """Behind the host's edge proxy, X-Forwarded-For carries the real client."""
 
     class Req:
         def __init__(self, headers, host):

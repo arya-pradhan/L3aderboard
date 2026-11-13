@@ -37,7 +37,7 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 ## Database migrations (Alembic, async)
 
-With `DATABASE_URL` set in `.env` (Railway Postgres):
+With `DATABASE_URL` set in `.env` (Neon Postgres):
 
 ```bash
 alembic revision --autogenerate -m "initial schema"   # first time only

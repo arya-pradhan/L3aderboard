@@ -25,6 +25,7 @@ export default function Nav() {
         </NavLink>
         <NavLink to="/library">Library</NavLink>
         <NavLink to="/feed">Feed</NavLink>
+        <NavLink to="/chat">Assistant</NavLink>
       </nav>
       <div className="spacer" />
       <form className="nav-search" onSubmit={submit}>

@@ -16,9 +16,9 @@ from app.core.security import decode_access_token
 def client_ip(request: Request) -> str:
     """The real client IP.
 
-    Railway terminates TLS at its edge proxy, so `request.client.host` is the
-    proxy — keying on it would make every user share a single limit. The real
-    client is the first hop of X-Forwarded-For, which Railway sets.
+    The host (Render) terminates TLS at its edge proxy, so `request.client.host`
+    is the proxy — keying on it would make every user share a single limit. The
+    real client is the first hop of X-Forwarded-For, which the proxy sets.
     """
     forwarded = request.headers.get("x-forwarded-for")
     if forwarded:
@@ -43,6 +43,7 @@ LOGIN_LIMIT = "5/minute"        # per IP — brute-force protection
 REGISTER_LIMIT = "3/hour"       # per IP — account-spam protection
 SEARCH_LIMIT = "30/minute"      # per user — RAWG quota protection (uncached)
 DETAIL_LIMIT = "60/minute"      # per user — RAWG quota protection (uncached)
+CHAT_LIMIT = "20/minute"        # per user — LLM cost protection
 
 
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
