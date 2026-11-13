@@ -9,12 +9,9 @@ Works with sparse data — a single liked game already yields useful neighbours.
 """
 from __future__ import annotations
 
+import math
+from collections import Counter
 from dataclasses import dataclass
-
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-
 
 @dataclass
 class LikedItem:
@@ -45,6 +42,11 @@ def extract_features(genres: list[str] | None, tags: list[str] | None) -> list[s
     return tokens
 
 
+def _norm(vec: dict[str, float]) -> dict[str, float]:
+    length = math.sqrt(sum(v * v for v in vec.values()))
+    return {k: v / length for k, v in vec.items()} if length else vec
+
+
 def recommend(
     liked: list[LikedItem],
     candidates: list[CandidateItem],
@@ -57,32 +59,27 @@ def recommend(
     if not liked or not candidates:
         return []
 
-    corpus = [item.features for item in liked] + [c.features for c in candidates]
-    # analyzer=identity: each document is already a list of feature tokens.
-    vectorizer = TfidfVectorizer(analyzer=lambda toks: toks)
-    try:
-        matrix = vectorizer.fit_transform(corpus)
-    except ValueError:
-        # Empty vocabulary (no usable features anywhere).
-        return []
-
-    n_liked = len(liked)
-    liked_matrix = matrix[:n_liked]
-    candidate_matrix = matrix[n_liked:]
+    # TF-IDF with sklearn's defaults: smoothed idf, L2-normalized rows.
+    docs = [Counter(item.features) for item in liked] + [
+        Counter(c.features) for c in candidates
+    ]
+    df = Counter(token for doc in docs for token in doc)
+    idf = {t: math.log((1 + len(docs)) / (1 + n)) + 1 for t, n in df.items()}
+    vecs = [_norm({t: tf * idf[t] for t, tf in doc.items()}) for doc in docs]
 
     # Weighted average of the liked vectors = the user's taste profile.
-    weights = np.array([[item.weight for item in liked]], dtype=float)
-    total = weights.sum()
-    if total <= 0:
-        weights = np.ones_like(weights)
-        total = weights.sum()
-    profile = (weights @ liked_matrix) / total  # (1, vocab)
+    weights = [item.weight for item in liked]
+    if sum(weights) <= 0:
+        weights = [1.0] * len(liked)
+    profile: Counter[str] = Counter()
+    for w, vec in zip(weights, vecs):
+        for t, v in vec.items():
+            profile[t] += w * v
+    profile = _norm(profile)
 
-    scores = cosine_similarity(np.asarray(profile), candidate_matrix)[0]
-
-    ranked = sorted(
-        (ScoredItem(key=candidates[i].key, score=float(s)) for i, s in enumerate(scores)),
-        key=lambda x: x.score,
-        reverse=True,
+    scored = (
+        ScoredItem(key=c.key, score=sum(profile.get(t, 0.0) * v for t, v in vec.items()))
+        for c, vec in zip(candidates, vecs[len(liked):])
     )
+    ranked = sorted(scored, key=lambda x: x.score, reverse=True)
     return [item for item in ranked if item.score > 0][:limit]

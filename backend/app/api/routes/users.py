@@ -9,7 +9,7 @@ from app.core.deps import CurrentUser, SessionDep
 from app.models import Follow, LibraryEntry, LibraryStatus, User
 from app.schemas.game import LibraryEntryRead
 from app.schemas.social import SuggestedUser, UserProfile
-from app.services.library_view import entries_to_reads
+from app.services.library_view import user_library
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -110,12 +110,7 @@ async def get_user_library(
 ) -> list[LibraryEntryRead]:
     """A user's public library, newest-updated first, filterable by status."""
     user = await _get_user_by_username(session, username)
-    stmt = select(LibraryEntry).where(LibraryEntry.user_id == user.id)
-    if status_filter is not None:
-        stmt = stmt.where(LibraryEntry.status == status_filter)
-    stmt = stmt.order_by(LibraryEntry.updated_at.desc())
-    entries = (await session.exec(stmt)).all()
-    return await entries_to_reads(session, entries)
+    return await user_library(session, user.id, status_filter)
 
 
 @router.post("/{username}/follow", status_code=status.HTTP_204_NO_CONTENT)

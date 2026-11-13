@@ -71,11 +71,6 @@ def _cache_set(key: str, value: Any) -> None:
     _cache[key] = (time.monotonic() + CACHE_TTL_SECONDS, value)
 
 
-def clear_cache() -> None:
-    """Exposed for tests."""
-    _cache.clear()
-
-
 # --- normalization -------------------------------------------------------
 
 
@@ -111,26 +106,29 @@ def _normalize(raw: dict) -> RawgGame:
 # --- requests ------------------------------------------------------------
 
 
-async def _fetch_games(
-    params: dict[str, Any], *, cache_key: str | None = None
-) -> list[RawgGame]:
-    """GET /games with the given filters, normalized (optionally cached)."""
-    if cache_key:
-        cached = _cache_get(cache_key)
-        if cached is not None:
-            return cached
-
+async def _get(path: str, params: dict[str, Any] | None = None) -> dict:
+    """GET a RAWG endpoint, mapping transport/HTTP failures to RAWG errors."""
     key = _require_key()
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             resp = await client.get(
-                f"{RAWG_BASE_URL}/games", params={"key": key, **params}
+                f"{RAWG_BASE_URL}{path}", params={"key": key, **(params or {})}
             )
+            if resp.status_code == 404:
+                raise RAWGNotFound(f"RAWG {path} not found")
             resp.raise_for_status()
     except httpx.HTTPError as exc:
         raise RAWGError(f"RAWG request failed: {exc}") from exc
+    return resp.json()
 
-    games = [_normalize(r) for r in resp.json().get("results", [])]
+
+async def _fetch_games(
+    params: dict[str, Any], *, cache_key: str | None = None
+) -> list[RawgGame]:
+    """GET /games with the given filters, normalized (optionally cached)."""
+    if cache_key and (cached := _cache_get(cache_key)) is not None:
+        return cached
+    games = [_normalize(r) for r in (await _get("/games", params)).get("results", [])]
     if cache_key:
         _cache_set(cache_key, games)
     return games
@@ -151,40 +149,23 @@ async def discover_games(*, limit: int = 20, **filters: Any) -> list[RawgGame]:
 
 async def list_genres() -> list[dict[str, str]]:
     """RAWG's genre list as [{slug, name}, ...]. Cached."""
-    cached = _cache_get("genres")
-    if cached is not None:
+    if (cached := _cache_get("genres")) is not None:
         return cached
-
-    key = _require_key()
-    try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                f"{RAWG_BASE_URL}/genres", params={"key": key, "page_size": 40}
-            )
-            resp.raise_for_status()
-    except httpx.HTTPError as exc:
-        raise RAWGError(f"RAWG genres request failed: {exc}") from exc
-
     genres = [
         {"slug": g["slug"], "name": g["name"]}
-        for g in resp.json().get("results", [])
+        for g in (await _get("/genres", {"page_size": 40})).get("results", [])
         if g.get("slug") and g.get("name")
     ]
     _cache_set("genres", genres)
     return genres
 
 
+async def genre_slugs(names: list[str]) -> list[str]:
+    """Map genre display names (as stored on games) to RAWG slugs, keeping order."""
+    slug_by_name = {g["name"].lower(): g["slug"] for g in await list_genres()}
+    return [slug_by_name[n.lower()] for n in names if n.lower() in slug_by_name]
+
+
 async def get_game(rawg_id: int) -> RawgGame:
     """Fetch a single game's full metadata (incl. description) by RAWG id."""
-    key = _require_key()
-    try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-            resp = await client.get(
-                f"{RAWG_BASE_URL}/games/{rawg_id}", params={"key": key}
-            )
-            if resp.status_code == 404:
-                raise RAWGNotFound(f"RAWG game {rawg_id} not found")
-            resp.raise_for_status()
-    except httpx.HTTPError as exc:
-        raise RAWGError(f"RAWG lookup failed: {exc}") from exc
-    return _normalize(resp.json())
+    return _normalize(await _get(f"/games/{rawg_id}"))

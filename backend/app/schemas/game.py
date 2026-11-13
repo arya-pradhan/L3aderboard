@@ -23,18 +23,11 @@ class RawgGame(BaseModel):
     description: str | None = None
 
 
-class GameRead(BaseModel):
-    """A game as stored in our database."""
+class GameRead(RawgGame):
+    """A game as stored in our database (title-only Steam games have no rawg_id)."""
 
     id: int
     rawg_id: int | None = None
-    title: str
-    genres: list[str] = []
-    tags: list[str] = []
-    platforms: list[str] = []
-    cover_url: str | None = None
-    release_date: date | None = None
-    description: str | None = None
 
     model_config = {"from_attributes": True}
 

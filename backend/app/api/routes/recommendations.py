@@ -69,15 +69,10 @@ async def _candidate_pool(
         return []
 
     try:
-        slug_by_name = {g["name"].lower(): g["slug"] for g in await rawg.list_genres()}
+        names = [name for name, _ in counts.most_common(CANDIDATE_GENRES)]
+        slugs = await rawg.genre_slugs(names)
     except rawg.RAWGError:
         return []
-
-    slugs = [
-        slug_by_name[name.lower()]
-        for name, _ in counts.most_common(CANDIDATE_GENRES)
-        if name.lower() in slug_by_name
-    ]
     if not slugs:
         return []
 

@@ -10,22 +10,12 @@ from collections.abc import Iterable, Sequence
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models import Game, LibraryEntry
+from app.models import Game, LibraryEntry, LibraryStatus
 from app.schemas.game import GameRead, LibraryEntryRead
 
 
 def entry_to_read(entry: LibraryEntry, game: Game) -> LibraryEntryRead:
-    return LibraryEntryRead(
-        id=entry.id,
-        status=entry.status,
-        rating=entry.rating,
-        review_text=entry.review_text,
-        hours_played=entry.hours_played,
-        source=entry.source,
-        created_at=entry.created_at,
-        updated_at=entry.updated_at,
-        game=GameRead.model_validate(game),
-    )
+    return LibraryEntryRead(**entry.model_dump(), game=GameRead.model_validate(game))
 
 
 async def entries_to_reads(
@@ -40,3 +30,14 @@ async def entries_to_reads(
     ).all()
     game_map = {g.id: g for g in games}
     return [entry_to_read(e, game_map[e.game_id]) for e in entries]
+
+
+async def user_library(
+    session: AsyncSession, user_id: int, status: LibraryStatus | None = None
+) -> list[LibraryEntryRead]:
+    """A user's library, newest-updated first, optionally filtered by status."""
+    stmt = select(LibraryEntry).where(LibraryEntry.user_id == user_id)
+    if status is not None:
+        stmt = stmt.where(LibraryEntry.status == status)
+    entries = (await session.exec(stmt.order_by(LibraryEntry.updated_at.desc()))).all()
+    return await entries_to_reads(session, entries)

@@ -43,15 +43,10 @@ async def _user_top_genre_slugs(
         return DEFAULT_GENRE_SLUGS[:limit]
 
     try:
-        slug_by_name = {g["name"].lower(): g["slug"] for g in await rawg.list_genres()}
+        slugs = await rawg.genre_slugs([name for name, _ in counts.most_common()])
     except rawg.RAWGError:
         return DEFAULT_GENRE_SLUGS[:limit]
 
-    slugs = [
-        slug_by_name[name.lower()]
-        for name, _ in counts.most_common()
-        if name.lower() in slug_by_name
-    ]
     # Top up with defaults so we always render the same number of rows.
     for fallback in DEFAULT_GENRE_SLUGS:
         if len(slugs) >= limit:

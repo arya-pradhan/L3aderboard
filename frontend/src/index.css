@@ -74,9 +74,6 @@ button {
   margin: 0 auto;
   padding: 30px 44px 64px;
 }
-.page-narrow {
-  max-width: 440px;
-}
 .row {
   display: flex;
   align-items: center;
@@ -528,15 +525,6 @@ textarea.input {
 }
 
 /* ── tags ───────────────────────────────────────────────────────── */
-.tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 9px;
-  border-radius: 5px;
-  background: rgba(239, 214, 172, 0.08);
-  font: 400 11.5px/1 var(--font);
-  color: var(--ink-70);
-}
 .chip-accent {
   padding: 3px 7px;
   border-radius: 5px;
@@ -641,24 +629,6 @@ textarea.input {
 }
 
 /* ── search results list ────────────────────────────────────────── */
-.result-row {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 9px;
-  background: var(--card);
-  box-shadow: inset 0 0 0 1px var(--line);
-  align-items: center;
-}
-.result-row .thumb {
-  width: 46px;
-  height: 64px;
-  flex: none;
-  border-radius: 5px;
-  background: linear-gradient(160deg, #1b332f, #0b1c25);
-  box-shadow: inset 0 0 0 1px var(--line);
-  object-fit: cover;
-}
 
 /* ── feed ───────────────────────────────────────────────────────── */
 .feed-item {
@@ -666,15 +636,6 @@ textarea.input {
   gap: 14px;
   padding: 16px 0;
   border-top: 1px solid var(--line);
-}
-.feed-item .thumb {
-  width: 44px;
-  height: 60px;
-  flex: none;
-  border-radius: 5px;
-  background: linear-gradient(160deg, #1b332f, #0b1c25);
-  box-shadow: inset 0 0 0 1px var(--line);
-  object-fit: cover;
 }
 
 /* ── feed layout + people panel ─────────────────────────────────── */

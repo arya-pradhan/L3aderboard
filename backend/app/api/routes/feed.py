@@ -30,35 +30,26 @@ async def activity_feed(
     if not followed_ids:
         return []
 
-    entries = (
+    rows = (
         await session.exec(
-            select(LibraryEntry)
+            select(LibraryEntry, Game, User)
+            .join(Game, Game.id == LibraryEntry.game_id)
+            .join(User, User.id == LibraryEntry.user_id)
             .where(LibraryEntry.user_id.in_(followed_ids))
             .order_by(LibraryEntry.updated_at.desc())
             .limit(limit)
         )
     ).all()
-    if not entries:
-        return []
-
-    # Batch-load the referenced games and actors to avoid N+1 queries.
-    game_ids = {e.game_id for e in entries}
-    games = (await session.exec(select(Game).where(Game.id.in_(game_ids)))).all()
-    game_map = {g.id: g for g in games}
-
-    user_ids = {e.user_id for e in entries}
-    users = (await session.exec(select(User).where(User.id.in_(user_ids)))).all()
-    user_map = {u.id: u for u in users}
 
     return [
         FeedItem(
             entry_id=e.id,
-            user=FeedActor(id=e.user_id, username=user_map[e.user_id].username),
+            user=FeedActor(id=u.id, username=u.username),
             status=e.status,
             rating=e.rating,
             hours_played=e.hours_played,
             updated_at=e.updated_at,
-            game=GameRead.model_validate(game_map[e.game_id]),
+            game=GameRead.model_validate(g),
         )
-        for e in entries
+        for e, g, u in rows
     ]
