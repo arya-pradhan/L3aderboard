@@ -13,8 +13,10 @@ function metacriticTier(score) {
 }
 
 // What RAWG players think: average score, the vote split, Metacritic, playtime.
+// Every field is optional: an older API (or a RAWG gap) must not crash the page.
 function RawgScore({ detail }) {
-  const shares = SHARE_ORDER.map((t) => detail.ratings.find((r) => r.title === t)).filter(Boolean);
+  const ratings = detail.ratings || [];
+  const shares = SHARE_ORDER.map((t) => ratings.find((r) => r.title === t)).filter(Boolean);
   if (!detail.rating && !detail.metacritic && !detail.playtime) return null;
   return (
     <div className="gm-scores">
@@ -23,7 +25,7 @@ function RawgScore({ detail }) {
           <div className="gm-rawg-head">
             <span className="gm-rawg-num">{detail.rating.toFixed(1)}</span>
             <span className="gm-rawg-of">
-              out of 5 from {detail.ratings_count.toLocaleString()} RAWG ratings
+              out of 5 from {(detail.ratings_count || 0).toLocaleString()} RAWG ratings
             </span>
           </div>
           {shares.length > 0 && (
