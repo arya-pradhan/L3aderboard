@@ -118,14 +118,14 @@ export default function GameRow({ title, subtitle, games, libraryIds, onPick, lo
       {loops && (
         <>
           <button
-            className="row-arrow left"
+            className="arcade-key row-arrow left"
             onClick={() => scrollByPage(-1)}
             aria-label={`Scroll ${title} back`}
           >
             <i className="ph ph-caret-left" aria-hidden="true" />
           </button>
           <button
-            className="row-arrow right"
+            className="arcade-key row-arrow right"
             onClick={() => scrollByPage(1)}
             aria-label={`Scroll ${title} forward`}
           >

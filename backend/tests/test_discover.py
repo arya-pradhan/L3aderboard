@@ -8,9 +8,10 @@ from app.schemas.game import RawgGame
 from app.services import rawg
 
 GENRES = [
-    {"slug": "indie", "name": "Indie"},
-    {"slug": "platformer", "name": "Platformer"},
     {"slug": "action", "name": "Action"},
+    {"slug": "indie", "name": "Indie"},
+    {"slug": "educational", "name": "Educational"},
+    {"slug": "platformer", "name": "Platformer"},
 ]
 
 HOLLOW_KNIGHT = RawgGame(
@@ -103,3 +104,24 @@ async def test_failing_row_is_dropped_not_fatal(
     rows = resp.json()
     assert len(rows) >= 1  # the failing row is simply absent
     assert all(r["games"] for r in rows)
+
+
+async def test_genres_put_library_favourites_first(client: AsyncClient, mock_rawg) -> None:
+    headers = await _auth(client, "shelfbrowser")
+    await client.post("/library", json={"rawg_id": 1}, headers=headers)  # Indie/Platformer
+    resp = await client.get("/discover/genres", headers=headers)
+    assert resp.status_code == 200, resp.text
+    slugs = [g["slug"] for g in resp.json()]
+    assert slugs[:2] == ["indie", "platformer"]
+    assert "action" in slugs
+    assert "educational" not in slugs  # niche genres get no shelf
+
+
+async def test_genre_shelf(client: AsyncClient, mock_rawg) -> None:
+    headers = await _auth(client, "genrefan")
+    resp = await client.get("/discover/genre/indie", headers=headers)
+    assert resp.status_code == 200, resp.text
+    assert resp.json()[0]["title"].startswith("Game")
+    assert mock_rawg[-1] == {"ordering": "-added", "genres": "indie"}
+    # Arbitrary slugs never reach RAWG.
+    assert (await client.get("/discover/genre/not-a-genre", headers=headers)).status_code == 404
