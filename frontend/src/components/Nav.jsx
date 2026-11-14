@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth.jsx";
 import { initials } from "../lib/util.js";
 
 export default function Nav() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [q, setQ] = useState("");
 
   const submit = (e) => {
@@ -28,15 +29,18 @@ export default function Nav() {
         <NavLink to="/chat">Assistant</NavLink>
       </nav>
       <div className="spacer" />
-      <form className="nav-search" onSubmit={submit}>
-        <i className="ph ph-magnifying-glass" style={{ fontSize: 14, color: "var(--ink-50)" }} />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Search games…"
-          aria-label="Search games"
-        />
-      </form>
+      {/* Discover has its own, bigger search box */}
+      {pathname !== "/" && (
+        <form className="nav-search" onSubmit={submit}>
+          <i className="ph ph-magnifying-glass" style={{ fontSize: 14, color: "var(--ink-50)" }} />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search games…"
+            aria-label="Search games"
+          />
+        </form>
+      )}
       <div className="row" style={{ gap: 8 }}>
         <NavLink to={`/u/${user.username}`} className="avatar" title={user.username}>
           {initials(user.username)}

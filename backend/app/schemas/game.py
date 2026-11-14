@@ -50,6 +50,11 @@ class GameRead(RawgGame):
     model_config = {"from_attributes": True}
 
 
+class GenreRef(BaseModel):
+    slug: str
+    name: str
+
+
 class DiscoveryRow(BaseModel):
     """One horizontal row on the home page."""
 

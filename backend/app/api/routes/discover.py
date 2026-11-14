@@ -9,12 +9,12 @@ import asyncio
 from collections import Counter
 from datetime import date, timedelta
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select
 
 from app.core.deps import CurrentUser, SessionDep
 from app.models import Game, LibraryEntry
-from app.schemas.game import DiscoveryRow
+from app.schemas.game import DiscoveryRow, GenreRef, RawgGame
 from app.services import rawg
 
 router = APIRouter(prefix="/discover", tags=["discover"])
@@ -23,6 +23,8 @@ router = APIRouter(prefix="/discover", tags=["discover"])
 DEFAULT_GENRE_SLUGS = ["indie", "action"]
 GENRE_ROWS = 2
 ROW_SIZE = 40  # RAWG's max page size
+# Genres too niche to deserve a home-page shelf.
+SKIP_GENRES = {"educational", "board-games", "card", "family"}
 
 
 async def _user_top_genre_slugs(
@@ -102,3 +104,24 @@ async def home_rows(
     # One slow/failing row shouldn't take down the whole home page.
     results = await asyncio.gather(*jobs, return_exceptions=True)
     return [r for r in results if isinstance(r, DiscoveryRow) and r.games]
+
+
+@router.get("/genres", response_model=list[GenreRef])
+async def genre_shelves(current_user: CurrentUser, session: SessionDep) -> list[GenreRef]:
+    """Genres for the home page's shelves: the user's favourites first, then the rest."""
+    try:
+        genres = [g for g in await rawg.list_genres() if g["slug"] not in SKIP_GENRES]
+    except rawg.RAWGError:
+        return []
+    top = await _user_top_genre_slugs(session, current_user.id, limit=3)
+    rank = {slug: i for i, slug in enumerate(top)}
+    # sorted() is stable: non-favourites keep RAWG's own (popularity) order.
+    return [GenreRef(**g) for g in sorted(genres, key=lambda g: rank.get(g["slug"], len(rank)))]
+
+
+@router.get("/genre/{slug}", response_model=list[RawgGame])
+async def genre_shelf(slug: str, current_user: CurrentUser) -> list[RawgGame]:
+    """One genre's shelf. Only RAWG's own genre slugs, so the cache stays bounded."""
+    if slug not in {g["slug"] for g in await rawg.list_genres()}:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Unknown genre")
+    return await rawg.discover_games(limit=ROW_SIZE, ordering="-added", genres=slug)

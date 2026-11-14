@@ -1,11 +1,47 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { api } from "../api/client.js";
 import GameCase from "../components/GameCase.jsx";
 import GameModal from "../components/GameModal.jsx";
 import GameRow from "../components/GameRow.jsx";
+import Spotlight from "../components/Spotlight.jsx";
 
 const SUGGESTIONS = ["Hollow Knight", "Elden Ring", "Balatro", "Outer Wilds", "Celeste"];
+const SPOTLIGHT_SIZE = 6;
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// A genre's shelf, fetched only when it scrolls within reach.
+function GenreShelf({ genre, library, onPick }) {
+  const ref = useRef(null);
+  const [games, setGames] = useState(null);
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        io.disconnect();
+        api.genreShelf(genre.slug).then(setGames).catch(() => setGames([]));
+      },
+      { rootMargin: "900px 0px" }
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [genre.slug]);
+  return (
+    <div ref={ref} id={`genre-${genre.slug}`} className="genre-anchor" data-slug={genre.slug}>
+      {games === null ? (
+        <GameRow title={genre.name} loading />
+      ) : (
+        <GameRow
+          title={genre.name}
+          subtitle="popular in this genre"
+          games={games}
+          libraryIds={library}
+          onPick={onPick}
+        />
+      )}
+    </div>
+  );
+}
 
 export default function Discover() {
   const [params, setParams] = useSearchParams();
@@ -19,7 +55,10 @@ export default function Discover() {
   const [recs, setRecs] = useState([]);
   const [rows, setRows] = useState([]);
   const [rowsLoading, setRowsLoading] = useState(true);
+  const [genres, setGenres] = useState([]);
+  const [activeGenre, setActiveGenre] = useState(null);
   const [modalGame, setModalGame] = useState(null);
+  const jumpingUntil = useRef(0); // in-view tracking pauses while a jump scrolls
 
   // On mount: library membership, personalized picks, and discovery rows.
   useEffect(() => {
@@ -36,7 +75,55 @@ export default function Discover() {
       .then(setRows)
       .catch(() => {})
       .finally(() => setRowsLoading(false));
+    api
+      .discoverGenres()
+      .then(setGenres)
+      .catch(() => {}); // older API: the home rows' own genre rows stay instead
   }, []);
+
+  // Light the genre switch for whichever shelf crosses the middle of the screen.
+  useEffect(() => {
+    if (q || !genres.length) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (Date.now() < jumpingUntil.current) return;
+        for (const e of entries) {
+          const slug = e.target.dataset.slug;
+          // Above or below the genre shelves, no switch is lit.
+          setActiveGenre((cur) => (e.isIntersecting ? slug : cur === slug ? null : cur));
+        }
+      },
+      { rootMargin: "-45% 0px -50% 0px" }
+    );
+    document.querySelectorAll(".genre-anchor").forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [genres, q]);
+
+  // Keep the lit switch visible when the strip is wider than the screen.
+  // Scroll only the strip: scrollIntoView would also nudge the page and
+  // cancel a jump that's still animating.
+  useEffect(() => {
+    const strip = document.querySelector(".genre-strip");
+    const pill = strip?.querySelector(".pill.active");
+    if (!pill) return;
+    const { left, right } = pill.getBoundingClientRect();
+    const box = strip.getBoundingClientRect();
+    if (left >= box.left && right <= box.right) return;
+    strip.scrollTo({
+      left: pill.offsetLeft - (strip.clientWidth - pill.offsetWidth) / 2,
+      behavior: reducedMotion() ? "auto" : "smooth",
+    });
+  }, [activeGenre]);
+
+  // The clicked genre lights at once; the last shelves can't scroll up to
+  // the middle of the screen, so in-view tracking would pick a neighbour.
+  const jumpTo = (slug) => {
+    setActiveGenre(slug);
+    jumpingUntil.current = Date.now() + 1200;
+    document
+      .getElementById(`genre-${slug}`)
+      ?.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "start" });
+  };
 
   useEffect(() => setTerm(q), [q]);
 
@@ -83,55 +170,35 @@ export default function Discover() {
     setModalGame(null);
   };
 
+  const popular = rows.find((r) => r.key === "popular");
+  const spotlight = (popular?.games || []).filter((g) => g.cover_url).slice(0, SPOTLIGHT_SIZE);
+  // With per-genre shelves available, the home rows' two genre rows are redundant.
+  const homeRows = genres.length ? rows.filter((r) => !r.key.startsWith("genre:")) : rows;
+
   return (
     <div className="page">
-      {/* hero */}
-      <div
-        className="panel"
-        style={{
-          position: "relative",
-          overflow: "hidden",
-          padding: "40px 36px",
-          marginBottom: 30,
-          background: "linear-gradient(115deg, #183a37 0%, #04151f 62%)",
-        }}
-      >
-        {/* the mockup's diagonal hatch — the brand's editorial texture */}
-        <div className="hero-hatch" aria-hidden="true" />
-        <h1 style={{ margin: "0 0 12px", font: "800 clamp(44px, 9vw, 64px)/0.9 var(--display)" }}>
-          Find your next game.
-        </h1>
-        <p className="muted" style={{ maxWidth: 460, margin: 0, fontSize: 14, lineHeight: 1.6 }}>
-          Search {`≈`}870,000 titles from RAWG, add them to your library, and track what
-          you play, rate and abandon.
-        </p>
-        <form onSubmit={submit} style={{ display: "flex", gap: 10, marginTop: 22, maxWidth: 520 }}>
-          <div className="nav-search" style={{ flex: 1, height: 44, width: "auto" }}>
-            <i className="ph ph-magnifying-glass" style={{ fontSize: 16, color: "var(--ink-50)" }} />
-            <input
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              placeholder="Search games…"
-              autoFocus
-            />
-          </div>
-          <button className="btn primary" style={{ height: 44 }}>
-            Search
-          </button>
-        </form>
+      <form className="discover-search" onSubmit={submit} role="search">
+        <div className="nav-search">
+          <i className="ph ph-magnifying-glass" aria-hidden="true" />
+          <input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Search 870,000 games"
+            aria-label="Search games"
+          />
+        </div>
+        <button className="btn primary">Search</button>
         {!q && (
-          <div className="row" style={{ gap: 6, marginTop: 14, flexWrap: "wrap" }}>
-            <span className="muted" style={{ fontSize: 12 }}>
-              Try:
-            </span>
+          <div className="discover-try">
+            <span className="muted">Try</span>
             {SUGGESTIONS.map((s) => (
-              <button key={s} className="pill plain" onClick={() => setParams({ q: s })}>
+              <button key={s} type="button" className="pill plain" onClick={() => setParams({ q: s })}>
                 {s}
               </button>
             ))}
           </div>
         )}
-      </div>
+      </form>
 
       {err && <div className="banner error">{err}</div>}
       {loading && (
@@ -140,14 +207,13 @@ export default function Discover() {
         </div>
       )}
 
-      {/* search results */}
       {!loading && q && results.length === 0 && !err && (
-        <div className="empty">No games found for “{q}”.</div>
+        <div className="empty">No games match “{q}”. Check the spelling or try a shorter title.</div>
       )}
       {q && results.length > 0 && (
         <>
           <div className="section-head">
-            <h3>Results</h3>
+            <h3>Results for “{q}”</h3>
             <span className="sub">{results.length} games</span>
           </div>
           <div className="game-grid" role="list">
@@ -158,9 +224,31 @@ export default function Discover() {
         </>
       )}
 
-      {/* default view: For You + discovery rows */}
       {!q && (
         <>
+          {spotlight.length > 0 ? (
+            <Spotlight title={popular.title} games={spotlight} library={library} onOpen={setModalGame} />
+          ) : (
+            rowsLoading && <div className="spot loading" aria-busy="true" aria-label="Loading featured games" />
+          )}
+
+          {genres.length > 0 && (
+            <nav className="genre-strip" aria-label="Jump to a genre">
+              <span className="genre-strip-label">Genres</span>
+              {genres.map((g) => (
+                <button
+                  key={g.slug}
+                  type="button"
+                  className={`pill ${activeGenre === g.slug ? "active" : ""}`}
+                  aria-current={activeGenre === g.slug || undefined}
+                  onClick={() => jumpTo(g.slug)}
+                >
+                  {g.name}
+                </button>
+              ))}
+            </nav>
+          )}
+
           {recs.length > 0 ? (
             <GameRow
               title="For you"
@@ -182,7 +270,7 @@ export default function Discover() {
             </>
           )}
 
-          {rows.map((row) => (
+          {homeRows.map((row) => (
             <GameRow
               key={row.key}
               title={row.title}
@@ -191,6 +279,10 @@ export default function Discover() {
               libraryIds={library}
               onPick={setModalGame}
             />
+          ))}
+
+          {genres.map((g) => (
+            <GenreShelf key={g.slug} genre={g} library={library} onPick={setModalGame} />
           ))}
         </>
       )}
